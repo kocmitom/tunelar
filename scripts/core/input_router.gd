@@ -22,6 +22,9 @@ var players: Array[PlayerConfig] = []
 var _keys := {}
 var _joy_axes := {}
 var _joy_buttons := {}
+# Presses since the last sample(), so taps shorter than one tick are not lost.
+var _keys_latched := {}
+var _joy_latched := {}
 
 
 func _input(event: InputEvent) -> void:
@@ -48,6 +51,7 @@ func process_input(event: InputEvent) -> void:
 		var id := _key_id(event)
 		if event.pressed:
 			_keys[id] = true
+			_keys_latched[id] = true
 		else:
 			_keys.erase(id)
 	elif event is InputEventJoypadMotion:
@@ -61,6 +65,7 @@ func process_input(event: InputEvent) -> void:
 		var button := Vector2i(event.device, event.button_index)
 		if event.pressed:
 			_joy_buttons[button] = true
+			_joy_latched[button] = true
 		else:
 			_joy_buttons.erase(button)
 
@@ -89,24 +94,44 @@ func is_radar_pressed(player_id: int) -> bool:
 	return _action(player_id, "radar", JOY_RADAR)
 
 
-func _action(player_id: int, action: String, joy_button: int) -> bool:
+# Input for one simulation tick. Fire/radar also report taps since the previous sample.
+func sample(player_id: int) -> Dictionary:
+	var input := {
+		"move": get_movement_vector(player_id),
+		"fire": is_fire_pressed(player_id) or _action(player_id, "fire", JOY_FIRE, true),
+		"radar": is_radar_pressed(player_id) or _action(player_id, "radar", JOY_RADAR, true),
+	}
+	if player_id < players.size():
+		var cfg := players[player_id]
+		if cfg.device_type == PlayerConfig.DeviceType.JOYPAD:
+			_joy_latched.erase(Vector2i(cfg.device_index, JOY_FIRE))
+			_joy_latched.erase(Vector2i(cfg.device_index, JOY_RADAR))
+		else:
+			for keycode in KEYBOARD_BINDINGS[cfg.device_type]["fire"] + KEYBOARD_BINDINGS[cfg.device_type]["radar"]:
+				_keys_latched.erase(keycode)
+	return input
+
+
+func _action(player_id: int, action: String, joy_button: int, latched: bool = false) -> bool:
 	if player_id >= players.size():
 		return false
 	var cfg := players[player_id]
 	if cfg.device_type == PlayerConfig.DeviceType.JOYPAD:
-		return _joy(cfg, joy_button) > 0.0
-	return _key(cfg, action) > 0.0
+		return _joy(cfg, joy_button, latched) > 0.0
+	return _key(cfg, action, latched) > 0.0
 
 
-func _key(cfg: PlayerConfig, action: String) -> float:
+func _key(cfg: PlayerConfig, action: String, latched: bool = false) -> float:
+	var state := _keys_latched if latched else _keys
 	for keycode in KEYBOARD_BINDINGS[cfg.device_type][action]:
-		if _keys.has(keycode):
+		if state.has(keycode):
 			return 1.0
 	return 0.0
 
 
-func _joy(cfg: PlayerConfig, button: int) -> float:
-	return 1.0 if _joy_buttons.has(Vector2i(cfg.device_index, button)) else 0.0
+func _joy(cfg: PlayerConfig, button: int, latched: bool = false) -> float:
+	var state := _joy_latched if latched else _joy_buttons
+	return 1.0 if state.has(Vector2i(cfg.device_index, button)) else 0.0
 
 
 func _key_id(event: InputEventKey) -> int:

@@ -134,6 +134,7 @@ func respawn(pos: Vector2) -> void:
 	fire_cooldown = 0.0
 	radar_time = 0.0
 	radar_dir = Vector2.ZERO
+	reset_physics_interpolation()
 
 
 static func snap_direction(v: Vector2) -> Vector2:

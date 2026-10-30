@@ -1,12 +1,15 @@
 class_name GameManager
 extends Node
 ## Owns the simulation: spawns tanks/HUDs, routes input, runs bullets and the round loop.
+## The simulation advances in fixed ticks (one per physics step); rendering is smoothed by physics interpolation.
 
 const TankScene := preload("res://scenes/tank/tank.tscn")
 const BulletScene := preload("res://scenes/combat/bullet.tscn")
 const HudScene := preload("res://scenes/ui/player_hud.tscn")
 
-const ROUND_FREEZE := 3.0
+const TICK_RATE := 30
+const TICK_DT := 1.0 / TICK_RATE
+const ROUND_FREEZE_TICKS := 3 * TICK_RATE
 const PLAYER_COLORS: Array[Color] = [
 	Color(0.3, 0.6, 1.0), Color(0.3, 1.0, 0.4), Color(1.0, 0.85, 0.2),
 	Color(1.0, 0.35, 0.9), Color(0.3, 1.0, 1.0), Color(1.0, 0.5, 0.2),
@@ -23,7 +26,8 @@ var tanks: Array[Tank] = []
 var huds: Array[PlayerHud] = []
 var wins: Array[int] = []
 var round_over: bool = false
-var freeze_time: float = 0.0
+var tick: int = 0
+var round_resume_tick: int = 0
 
 @onready var manager: ViewportManager = get_parent()
 @onready var router: InputRouter = get_parent().get_node("InputRouter")
@@ -34,8 +38,8 @@ func _ready() -> void:
 	setup(router.assign_devices(Input.get_connected_joypads()))
 
 
-func _physics_process(delta: float) -> void:
-	step(delta)
+func _physics_process(_delta: float) -> void:
+	step()
 
 
 func setup(player_count: int) -> void:
@@ -89,34 +93,45 @@ func start_round(new_seed: int) -> void:
 	for hud in huds:
 		hud.hide_banner()
 	round_over = false
-	freeze_time = 0.0
 	manager.update_cameras()
+	for cam in manager.cameras:
+		cam.reset_physics_interpolation()
 
 
-func step(delta: float) -> void:
+# Advances exactly one tick using the local devices' input.
+func step() -> void:
+	var inputs: Array[Dictionary] = []
+	for tank in tanks:
+		inputs.append(router.sample(tank.player_id))
+	simulate(inputs)
+
+
+# One fixed TICK_DT step. inputs[player_id] = {"move": Vector2, "fire": bool, "radar": bool}.
+func simulate(inputs: Array[Dictionary]) -> void:
+	tick += 1
 	if round_over:
-		freeze_time -= delta
-		if freeze_time <= 0.0:
+		if tick >= round_resume_tick:
 			start_round(randi())
 		_update_huds()
 		return
 
 	for bullet in bullets_root.get_children():
-		bullet.step(delta)
+		bullet.step(TICK_DT)
 
 	for tank in tanks:
 		if tank.is_dead:
 			continue
-		var id := tank.player_id
-		tank.tick(delta)
-		tank.step_movement(delta, router.get_movement_vector(id))
-		if router.is_fire_pressed(id):
+		var input := inputs[tank.player_id]
+		tank.tick(TICK_DT)
+		tank.step_movement(TICK_DT, input["move"])
+		if input["fire"]:
 			tank.try_fire()
-		if router.is_radar_pressed(id) and tank.try_radar():
+		if input["radar"] and tank.try_radar():
 			tank.radar_dir = get_radar_direction(tank, tanks)
 
 	_check_round_end()
 	_update_huds()
+	manager.update_cameras()
 
 
 static func get_radar_direction(source_tank: Tank, targets: Array[Tank]) -> Vector2:
@@ -137,7 +152,7 @@ func _check_round_end() -> void:
 	if alive.size() > 1:
 		return
 	round_over = true
-	freeze_time = ROUND_FREEZE
+	round_resume_tick = tick + ROUND_FREEZE_TICKS
 	var text := "DRAW"
 	if alive.size() == 1:
 		var winner: Tank = alive[0]
@@ -160,3 +175,4 @@ func _on_tank_fired(tank: Tank) -> void:
 	bullet.position = tank.muzzle_position()
 	bullet.velocity = tank.facing * Bullet.BULLET_SPEED
 	bullets_root.add_child(bullet)
+	bullet.reset_physics_interpolation()

@@ -1,7 +1,6 @@
 extends "res://tests/test_case.gd"
 
 const GridScene := preload("res://scenes/ui/viewport_grid.tscn")
-const DT := 1.0 / 60.0
 
 
 func _make_game(player_count: int) -> GameManager:
@@ -14,8 +13,8 @@ func _make_game(player_count: int) -> GameManager:
 
 
 func _run(gm: GameManager, seconds: float) -> void:
-	for i in roundi(seconds / DT):
-		gm.step(DT)
+	for i in roundi(seconds * GameManager.TICK_RATE):
+		gm.step()
 
 
 func _press(gm: GameManager, keycode: Key, pressed: bool) -> void:
@@ -73,14 +72,14 @@ func test_bases_drawn_in_player_color() -> void:
 func test_input_drives_fire_and_radar() -> void:
 	var gm := _make_game(2)
 	_press(gm, KEY_SPACE, true)
-	gm.step(DT)
+	gm.step()
 	_press(gm, KEY_SPACE, false)
 	check_eq(gm.bullets_root.get_child_count(), 1, "P1 fire spawns a bullet")
 	check_eq(gm.tanks[0].energy, Tank.MAX_ENERGY - Tank.ENERGY_COST_FIRE, "P1 paid for the shot")
 	check_eq(gm.tanks[1].energy, Tank.MAX_ENERGY, "P2 untouched")
 
 	_press(gm, KEY_Q, true)
-	gm.step(DT)
+	gm.step()
 	var expected := (gm.tanks[1].global_position - gm.tanks[0].global_position).normalized()
 	check(gm.tanks[0].radar_dir.is_equal_approx(expected), "radar needle points at P2")
 	check(gm.tanks[0].radar_time > 0.0, "radar active")
@@ -92,7 +91,7 @@ func test_round_reset() -> void:
 	var first_seed := gm.terrain.map_seed
 	gm.tanks[0].energy = 40.0
 	gm.tanks[1].destroy()
-	gm.step(DT)
+	gm.step()
 	check(gm.round_over, "round ends with one tank left")
 	check_eq(gm.wins[0], 1, "survivor credited")
 	check(gm.huds[0].banner.visible and gm.huds[1].banner.visible, "banner on every HUD")

@@ -1,7 +1,7 @@
 extends "res://tests/test_case.gd"
 
 const TankScene := preload("res://scenes/tank/tank.tscn")
-const DT := 1.0 / 60.0
+const DT := GameManager.TICK_DT
 
 
 func _spawn(terrain: TerrainData, pos: Vector2) -> Tank:
@@ -104,10 +104,10 @@ func test_base_recharge() -> void:
 	var tank := _spawn(terrain, Vector2(60, 100))
 	tank.home_rect = Rect2i(50, 90, 21, 21)
 	tank.energy = 10.0
-	for i in 60:
+	for i in GameManager.TICK_RATE:
 		tank.tick(DT)
 	check_near(tank.energy, 10.0 + Tank.ENERGY_RECHARGE_BASE + Tank.ENERGY_REGEN_PASSIVE, 0.1, "recharge rate")
-	for i in 240:
+	for i in 4 * GameManager.TICK_RATE:
 		tank.tick(DT)
 	check_eq(tank.energy, Tank.MAX_ENERGY, "recharge capped at max")
 	tank.energy = 10.0

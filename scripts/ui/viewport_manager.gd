@@ -19,10 +19,6 @@ func _ready() -> void:
 	get_window().title = "%s v%s" % [ProjectSettings.get_setting("application/config/name"), version]
 
 
-func _physics_process(_delta: float) -> void:
-	update_cameras()
-
-
 func build(player_count: int, map_size: Vector2i) -> void:
 	for child in grid.get_children():
 		child.free()
@@ -56,6 +52,7 @@ func build(player_count: int, map_size: Vector2i) -> void:
 		var cam := Camera2D.new()
 		cam.name = "Camera2D_%d" % (i + 1)
 		cam.zoom = Vector2(camera_zoom, camera_zoom)
+		cam.process_callback = Camera2D.CAMERA2D_PROCESS_PHYSICS
 		cam.limit_left = 0
 		cam.limit_top = 0
 		cam.limit_right = map_size.x

@@ -2,7 +2,7 @@ extends "res://tests/test_case.gd"
 
 const TankScene := preload("res://scenes/tank/tank.tscn")
 const BulletScene := preload("res://scenes/combat/bullet.tscn")
-const DT := 1.0 / 60.0
+const DT := GameManager.TICK_DT
 
 
 func _corridor() -> TerrainData:
@@ -70,7 +70,7 @@ func test_diagonal_bounce() -> void:
 	for y in range(103, 110):
 		for x in range(90, 130):
 			terrain.cells[y * terrain.width + x] = TerrainData.BEDROCK
-	_run(bullet, 1.0 / 30.0)
+	_run(bullet, DT)
 	check(bullet.velocity.y < 0.0 and bullet.velocity.x > 0.0, "floor flips only the vertical component (got %s)" % bullet.velocity)
 	bullet.free()
 

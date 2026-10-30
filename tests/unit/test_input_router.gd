@@ -74,6 +74,30 @@ func test_p1_p3_isolated_vectors() -> void:
 	router.free()
 
 
+func test_sample_latches_taps() -> void:
+	var router := InputRouter.new()
+	router.assign_devices([0] as Array[int])
+	_key(router, KEY_SPACE, true)
+	_key(router, KEY_SPACE, false)
+	_key(router, KEY_KP_0, true)
+	_key(router, KEY_KP_0, false)
+	_button(router, 0, JOY_BUTTON_B, true)
+	_button(router, 0, JOY_BUTTON_B, false)
+	check(not router.is_fire_pressed(0), "tap is no longer held")
+
+	check(router.sample(0)["fire"], "P1 tap reported by sample")
+	check(not router.sample(0)["fire"], "P1 tap consumed")
+	check(router.sample(1)["fire"], "P2 tap survives P1 sampling")
+	check(router.sample(2)["radar"], "P3 joypad radar tap reported")
+	check(not router.sample(2)["radar"], "P3 tap consumed")
+
+	_key(router, KEY_SPACE, true)
+	check(router.sample(0)["fire"] and router.sample(0)["fire"], "held key fires every sample")
+	_key(router, KEY_D, true)
+	check_eq(router.sample(0)["move"], Vector2.RIGHT, "sample carries movement")
+	router.free()
+
+
 func test_fire_and_radar() -> void:
 	var router := InputRouter.new()
 	router.assign_devices([0] as Array[int])

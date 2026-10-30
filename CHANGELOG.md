@@ -4,6 +4,17 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+### Added
+- Fixed 30 Hz simulation ticks with a tick counter (`GameManager.tick`); each tick always advances by `TICK_DT`, independent of frame rate.
+- `GameManager.simulate(inputs)` runs one tick from per-player input dictionaries (`move`, `fire`, `radar`), ready to be fed from the network.
+- `InputRouter.sample()` reads input once per tick and latches fire/radar taps that happen between ticks.
+- Game version shown in the window title and in the bottom-right corner.
+
+### Changed
+- Physics runs at 30 ticks per second with physics interpolation enabled for smooth rendering.
+- The round-end freeze is measured in ticks (`ROUND_FREEZE_TICKS`).
+- Cameras follow their tank at the end of each tick instead of in a separate physics callback.
+
 ## [0.1.0] - 2026-10-30
 
 First playable version of the 6-player local split-screen Tunneler remake (Godot 4.7).
