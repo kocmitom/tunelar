@@ -1,0 +1,23 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/core/updater.gd" id="1_upd"]
+
+[node name="Updater" type="CanvasLayer"]
+layer = 10
+script = ExtResource("1_upd")
+
+[node name="Button" type="Button" parent="."]
+visible = false
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -140.0
+offset_top = 8.0
+offset_right = 140.0
+offset_bottom = 48.0
+grow_horizontal = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 20
+text = "Update"
+
+[connection signal="pressed" from="Button" to="." method="_on_button_pressed"]

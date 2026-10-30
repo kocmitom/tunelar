@@ -9,6 +9,10 @@ config/version="0.1.0"
 run/main_scene="res://scenes/ui/viewport_grid.tscn"
 config/features=PackedStringArray("4.7")
 
+[autoload]
+
+Updater="*res://scenes/ui/updater.tscn"
+
 [display]
 
 window/size/viewport_width=1920

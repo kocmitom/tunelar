@@ -9,6 +9,8 @@ All notable changes to this project are documented here. Versions follow [Semant
 - `GameManager.simulate(inputs)` runs one tick from per-player input dictionaries (`move`, `fire`, `radar`), ready to be fed from the network.
 - `InputRouter.sample()` reads input once per tick and latches fire/radar taps that happen between ticks.
 - Game version shown in the window title and in the bottom-right corner.
+- LAN auto-update: exported games announce their version on the LAN (UDP/TCP port 47800); an older game shows an "Update to vX.Y.Z" button that downloads the newer pack from that PC and restarts with it.
+- Windows Desktop export preset (exe with a separate `.pck`, tests excluded).
 
 ### Changed
 - Physics runs at 30 ticks per second with physics interpolation enabled for smooth rendering.
