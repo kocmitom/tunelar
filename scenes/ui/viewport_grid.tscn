@@ -1,0 +1,31 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/viewport_manager.gd" id="1_vm"]
+[ext_resource type="Script" path="res://scripts/core/input_router.gd" id="2_router"]
+[ext_resource type="Script" path="res://scripts/core/game_manager.gd" id="3_gm"]
+
+[node name="ViewportGrid" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_vm")
+
+[node name="GridContainer" type="GridContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/h_separation = 4
+theme_override_constants/v_separation = 4
+columns = 3
+
+[node name="InputRouter" type="Node" parent="."]
+script = ExtResource("2_router")
+
+[node name="GameManager" type="Node" parent="."]
+script = ExtResource("3_gm")

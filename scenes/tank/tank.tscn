@@ -1,0 +1,15 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/tank/tank.gd" id="1_tank"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_tank"]
+radius = 3.0
+
+[node name="Tank" type="CharacterBody2D"]
+motion_mode = 1
+script = ExtResource("1_tank")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_tank")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
