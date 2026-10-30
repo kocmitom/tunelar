@@ -10,6 +10,13 @@ var tanks: Array[Tank] = []
 var world_root: Node2D
 
 @onready var grid: GridContainer = $GridContainer
+@onready var version_label: Label = $VersionLabel
+
+
+func _ready() -> void:
+	var version: String = ProjectSettings.get_setting("application/config/version")
+	version_label.text = "v%s" % version
+	get_window().title = "%s v%s" % [ProjectSettings.get_setting("application/config/name"), version]
 
 
 func _physics_process(_delta: float) -> void:
