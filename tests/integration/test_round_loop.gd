@@ -69,7 +69,7 @@ func test_bases_drawn_in_player_color() -> void:
 	gm.manager.free()
 
 
-func test_input_drives_fire_and_radar() -> void:
+func test_input_drives_fire() -> void:
 	var gm := _make_game(2)
 	_press(gm, KEY_SPACE, true)
 	gm.step()
@@ -77,12 +77,6 @@ func test_input_drives_fire_and_radar() -> void:
 	check_eq(gm.bullets_root.get_child_count(), 1, "P1 fire spawns a bullet")
 	check_eq(gm.tanks[0].energy, Tank.MAX_ENERGY - Tank.ENERGY_COST_FIRE, "P1 paid for the shot")
 	check_eq(gm.tanks[1].energy, Tank.MAX_ENERGY, "P2 untouched")
-
-	_press(gm, KEY_Q, true)
-	gm.step()
-	var expected := (gm.tanks[1].global_position - gm.tanks[0].global_position).normalized()
-	check(gm.tanks[0].radar_dir.is_equal_approx(expected), "radar needle points at P2")
-	check(gm.tanks[0].radar_time > 0.0, "radar active")
 	gm.manager.free()
 
 

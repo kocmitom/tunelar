@@ -1,0 +1,17 @@
+---
+description: Every finished change bumps the game version
+alwaysApply: true
+---
+
+# Version bump on every finished change
+
+The LAN updater only offers builds with a higher version, so a change without a bump never reaches the other players.
+
+When a change is finished (before reporting done or committing):
+
+1. Bump `config/version` in `project.godot` (the single source of truth):
+   - PATCH (`0.2.0` -> `0.2.1`): fixes and gameplay tweaks.
+   - MINOR (`0.2.1` -> `0.3.0`): new features or anything that changes how the game plays together.
+   - MAJOR: only when the user asks.
+2. In `CHANGELOG.md`, move the `[Unreleased]` entries into a new `## [X.Y.Z] - YYYY-MM-DD` section and leave `[Unreleased]` empty.
+3. Bump once per finished change, not once per edit or per to-do.

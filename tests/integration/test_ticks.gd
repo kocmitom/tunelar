@@ -72,8 +72,8 @@ func test_simulate_with_synthetic_inputs() -> void:
 	var gm := _make_game(2)
 	var x0 := gm.tanks[0].position.x
 	var p1 := gm.tanks[1].position
-	var idle := {"move": Vector2.ZERO, "fire": false, "radar": false}
-	var inputs: Array[Dictionary] = [{"move": Vector2.RIGHT, "fire": true, "radar": false}, idle]
+	var idle := {"move": Vector2.ZERO, "fire": false}
+	var inputs: Array[Dictionary] = [{"move": Vector2.RIGHT, "fire": true}, idle]
 	gm.simulate(inputs)
 	check(gm.tanks[0].position.x > x0, "tank 0 moved from injected input")
 	check_eq(gm.bullets_root.get_child_count(), 1, "tank 0 fired from injected input")

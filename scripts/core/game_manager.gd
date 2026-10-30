@@ -106,7 +106,7 @@ func step() -> void:
 	simulate(inputs)
 
 
-# One fixed TICK_DT step. inputs[player_id] = {"move": Vector2, "fire": bool, "radar": bool}.
+# One fixed TICK_DT step. inputs[player_id] = {"move": Vector2, "fire": bool}.
 func simulate(inputs: Array[Dictionary]) -> void:
 	tick += 1
 	if round_over:
@@ -126,25 +126,10 @@ func simulate(inputs: Array[Dictionary]) -> void:
 		tank.step_movement(TICK_DT, input["move"])
 		if input["fire"]:
 			tank.try_fire()
-		if input["radar"] and tank.try_radar():
-			tank.radar_dir = get_radar_direction(tank, tanks)
 
 	_check_round_end()
 	_update_huds()
 	manager.update_cameras()
-
-
-static func get_radar_direction(source_tank: Tank, targets: Array[Tank]) -> Vector2:
-	var closest_dist: float = INF
-	var best_dir: Vector2 = Vector2.ZERO
-	for target in targets:
-		if target == source_tank or target.is_dead:
-			continue
-		var diff = target.global_position - source_tank.global_position
-		if diff.length_squared() < closest_dist:
-			closest_dist = diff.length_squared()
-			best_dir = diff.normalized()
-	return best_dir
 
 
 func _check_round_end() -> void:

@@ -81,15 +81,11 @@ func test_sample_latches_taps() -> void:
 	_key(router, KEY_SPACE, false)
 	_key(router, KEY_KP_0, true)
 	_key(router, KEY_KP_0, false)
-	_button(router, 0, JOY_BUTTON_B, true)
-	_button(router, 0, JOY_BUTTON_B, false)
 	check(not router.is_fire_pressed(0), "tap is no longer held")
 
 	check(router.sample(0)["fire"], "P1 tap reported by sample")
 	check(not router.sample(0)["fire"], "P1 tap consumed")
 	check(router.sample(1)["fire"], "P2 tap survives P1 sampling")
-	check(router.sample(2)["radar"], "P3 joypad radar tap reported")
-	check(not router.sample(2)["radar"], "P3 tap consumed")
 
 	_key(router, KEY_SPACE, true)
 	check(router.sample(0)["fire"] and router.sample(0)["fire"], "held key fires every sample")
@@ -98,19 +94,13 @@ func test_sample_latches_taps() -> void:
 	router.free()
 
 
-func test_fire_and_radar() -> void:
+func test_fire() -> void:
 	var router := InputRouter.new()
 	router.assign_devices([0] as Array[int])
 	_key(router, KEY_SPACE, true)
 	check(router.is_fire_pressed(0), "P1 fire")
 	check(not router.is_fire_pressed(1), "P2 no fire")
 	check(not router.is_fire_pressed(2), "P3 no fire")
-
-	_key(router, KEY_SHIFT, true, KEY_LOCATION_LEFT)
-	check(not router.is_radar_pressed(1), "left shift is not P2 radar")
-	_key(router, KEY_SHIFT, true, KEY_LOCATION_RIGHT)
-	check(router.is_radar_pressed(1), "right shift is P2 radar")
-	check(not router.is_radar_pressed(0), "P1 no radar")
 
 	_key(router, KEY_KP_0, true)
 	check(router.is_fire_pressed(1), "numpad 0 is P2 fire")
@@ -119,6 +109,4 @@ func test_fire_and_radar() -> void:
 	check(router.is_fire_pressed(2), "joy button 0 is P3 fire")
 	_button(router, 0, JOY_BUTTON_A, false)
 	check(not router.is_fire_pressed(2), "P3 fire released")
-	_button(router, 0, JOY_BUTTON_B, true)
-	check(router.is_radar_pressed(2), "joy button 1 is P3 radar")
 	router.free()

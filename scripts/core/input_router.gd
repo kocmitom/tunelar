@@ -1,22 +1,20 @@
 class_name InputRouter
 extends Node
-## Tracks raw keyboard/joypad state and exposes uniform per-player actions (move, fire, radar).
+## Tracks raw keyboard/joypad state and exposes uniform per-player actions (move, fire).
 
 const MAX_PLAYERS := 6
 const DEADZONE := 0.5
-const KEY_RIGHT_SHIFT := -KEY_SHIFT
 const KEYBOARD_BINDINGS := {
 	PlayerConfig.DeviceType.KEYBOARD_A: {
 		"up": [KEY_W], "down": [KEY_S], "left": [KEY_A], "right": [KEY_D],
-		"fire": [KEY_SPACE], "radar": [KEY_Q],
+		"fire": [KEY_SPACE],
 	},
 	PlayerConfig.DeviceType.KEYBOARD_B: {
 		"up": [KEY_UP], "down": [KEY_DOWN], "left": [KEY_LEFT], "right": [KEY_RIGHT],
-		"fire": [KEY_ENTER, KEY_KP_0], "radar": [KEY_RIGHT_SHIFT],
+		"fire": [KEY_ENTER, KEY_KP_0],
 	},
 }
 const JOY_FIRE := JOY_BUTTON_A
-const JOY_RADAR := JOY_BUTTON_B
 
 var players: Array[PlayerConfig] = []
 var _keys := {}
@@ -48,7 +46,7 @@ func process_input(event: InputEvent) -> void:
 	if event is InputEventKey:
 		if event.echo:
 			return
-		var id := _key_id(event)
+		var id: int = event.physical_keycode
 		if event.pressed:
 			_keys[id] = true
 			_keys_latched[id] = true
@@ -90,24 +88,18 @@ func is_fire_pressed(player_id: int) -> bool:
 	return _action(player_id, "fire", JOY_FIRE)
 
 
-func is_radar_pressed(player_id: int) -> bool:
-	return _action(player_id, "radar", JOY_RADAR)
-
-
-# Input for one simulation tick. Fire/radar also report taps since the previous sample.
+# Input for one simulation tick. Fire also reports taps since the previous sample.
 func sample(player_id: int) -> Dictionary:
 	var input := {
 		"move": get_movement_vector(player_id),
 		"fire": is_fire_pressed(player_id) or _action(player_id, "fire", JOY_FIRE, true),
-		"radar": is_radar_pressed(player_id) or _action(player_id, "radar", JOY_RADAR, true),
 	}
 	if player_id < players.size():
 		var cfg := players[player_id]
 		if cfg.device_type == PlayerConfig.DeviceType.JOYPAD:
 			_joy_latched.erase(Vector2i(cfg.device_index, JOY_FIRE))
-			_joy_latched.erase(Vector2i(cfg.device_index, JOY_RADAR))
 		else:
-			for keycode in KEYBOARD_BINDINGS[cfg.device_type]["fire"] + KEYBOARD_BINDINGS[cfg.device_type]["radar"]:
+			for keycode in KEYBOARD_BINDINGS[cfg.device_type]["fire"]:
 				_keys_latched.erase(keycode)
 	return input
 
@@ -132,9 +124,3 @@ func _key(cfg: PlayerConfig, action: String, latched: bool = false) -> float:
 func _joy(cfg: PlayerConfig, button: int, latched: bool = false) -> float:
 	var state := _joy_latched if latched else _joy_buttons
 	return 1.0 if state.has(Vector2i(cfg.device_index, button)) else 0.0
-
-
-func _key_id(event: InputEventKey) -> int:
-	if event.physical_keycode == KEY_SHIFT and event.location == KEY_LOCATION_RIGHT:
-		return KEY_RIGHT_SHIFT
-	return event.physical_keycode

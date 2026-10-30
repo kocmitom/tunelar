@@ -18,8 +18,6 @@ const SPEED_FACTOR_EMPTY := 0.25
 const DIG_MARGIN := 1
 const ENERGY_COST_FIRE := 8.0
 const FIRE_COOLDOWN := 0.25
-const ENERGY_COST_RADAR := 5.0
-const RADAR_DURATION := 1.5
 
 static var _texture: ImageTexture
 
@@ -33,8 +31,6 @@ var facing: Vector2 = Vector2.UP
 var home_rect: Rect2i
 var is_dead: bool = false
 var fire_cooldown: float = 0.0
-var radar_time: float = 0.0
-var radar_dir: Vector2 = Vector2.ZERO
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var shape: CollisionShape2D = $CollisionShape2D
@@ -49,7 +45,6 @@ func _ready() -> void:
 
 func tick(delta: float) -> void:
 	fire_cooldown = maxf(0.0, fire_cooldown - delta)
-	radar_time = maxf(0.0, radar_time - delta)
 	if is_dead:
 		return
 	var recharge := ENERGY_REGEN_PASSIVE
@@ -97,14 +92,6 @@ func try_fire() -> bool:
 	return true
 
 
-func try_radar() -> bool:
-	if is_dead or energy < ENERGY_COST_RADAR or radar_time > 0.0:
-		return false
-	energy -= ENERGY_COST_RADAR
-	radar_time = RADAR_DURATION
-	return true
-
-
 func muzzle_position() -> Vector2:
 	return global_position + facing * (tank_radius + 2)
 
@@ -132,8 +119,6 @@ func respawn(pos: Vector2) -> void:
 	velocity = Vector2.ZERO
 	energy = MAX_ENERGY
 	fire_cooldown = 0.0
-	radar_time = 0.0
-	radar_dir = Vector2.ZERO
 	reset_physics_interpolation()
 
 
