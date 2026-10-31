@@ -4,6 +4,12 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.18.2] - 2026-10-31
+
+### Changed
+- Digging is 25% faster (15.6 px/s instead of 12.5); driving through dug tunnels keeps its speed. The digging drain rises with it (4.7 instead of 3.75 per second), so a pixel of digging still costs the same energy. Jelly slows and drains the same way.
+- Upgrades are half as expensive: level N costs N x 1500 instead of N x 3000, so a full battery of digging pays for two level 1 upgrades.
+
 ## [0.18.1] - 2026-10-31
 
 ### Changed

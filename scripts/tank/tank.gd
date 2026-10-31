@@ -7,10 +7,10 @@ signal destroyed(tank: Tank, attacker: Tank)
 
 const MAX_ENERGY := 100.0
 const SPEED_CLEAR := 60.0
-const SPEED_DIGGING := 12.5
+const SPEED_DIGGING := 15.625
 const ENERGY_DRAIN_IDLE := 0.0
 const ENERGY_DRAIN_MOVE_CLEAR := 0.0
-const ENERGY_DRAIN_DIGGING := 3.75
+const ENERGY_DRAIN_DIGGING := 4.6875
 const ENERGY_RECHARGE_BASE := 25.0
 const ENERGY_REGEN_PASSIVE := 0.5
 const LOW_ENERGY := 10.0
@@ -26,8 +26,8 @@ const SHIELD_RECHARGE_BASE := 1.0
 
 enum Upgrade { SHIELD, ENERGY, SPEED, RADAR }
 const MAX_LEVEL := 5
-# About the dirt cells one full base battery digs; level N costs N times this.
-const UPGRADE_COST := 3000
+# About half the dirt cells one full base battery digs; level N costs N times this.
+const UPGRADE_COST := 1500
 const ENERGY_PER_LEVEL := 0.5
 const SPEED_PER_LEVEL := 0.25
 const RADAR_PER_LEVEL := 0.25
