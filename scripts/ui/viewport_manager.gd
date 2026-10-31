@@ -147,7 +147,13 @@ func update_cameras(inputs: Array[Dictionary] = [], delta: float = 0.0) -> void:
 		var sonar := sonars[i]
 		sonar.visible = tank.special == Tank.Special.RADAR and not tank.is_dead and not map_shown
 		sonar.position = tank.global_position
+		sonar.radius = tank.reveal_radius()
 		sonar.angles.clear()
+		sonar.distances.clear()
+		sonar.colors.clear()
 		for other in tanks:
 			if other != tank and not other.is_dead:
-				sonar.angles.append((other.global_position - tank.global_position).angle())
+				var to_other := other.global_position - tank.global_position
+				sonar.angles.append(to_other.angle())
+				sonar.distances.append(to_other.length())
+				sonar.colors.append(other.color)

@@ -1,15 +1,21 @@
 class_name Sonar
 extends Node2D
-## Radar special: a line sweeping around the own tank that flares up yellow while it points at another player.
+## Radar special: a line sweeping around the own tank that flares up in a player's color while it points at them, longer the closer they are.
 
 const LENGTH := 14.0
 const TURN_TIME := 1.5
 const HIT_ANGLE := PI / 12.0
 const COLOR := Color(0.4, 1.0, 0.5)
-const HIT_COLOR := Color(1.0, 0.9, 0.2)
+# Flare is 2x long up to NEAR view radii away, shrinking linearly to 0.5x at FAR.
+const NEAR := 2.0
+const FAR := 10.0
 
-# Directions to the other living tanks.
+# Directions, distances and colors of the other living tanks.
 var angles: Array[float] = []
+var distances: Array[float] = []
+var colors: Array[Color] = []
+# Reveal radius of the own tank.
+var radius: float = LENGTH
 # Purely visual, so it runs on frame time outside the lockstep simulation.
 var _sweep: float = 0.0
 
@@ -20,5 +26,12 @@ func _process(delta: float) -> void:
 
 
 func _draw() -> void:
-	var hit := angles.any(func(a: float) -> bool: return absf(angle_difference(_sweep, a)) <= HIT_ANGLE)
-	draw_line(Vector2.ZERO, Vector2.from_angle(_sweep) * LENGTH, HIT_COLOR if hit else Color(COLOR, 0.5), 1.5 if hit else 0.75)
+	var hit := -1
+	for i in angles.size():
+		if absf(angle_difference(_sweep, angles[i])) <= HIT_ANGLE and (hit < 0 or distances[i] < distances[hit]):
+			hit = i
+	if hit < 0:
+		draw_line(Vector2.ZERO, Vector2.from_angle(_sweep) * LENGTH, Color(COLOR, 0.5), 0.75)
+		return
+	var t := clampf((distances[hit] - NEAR * radius) / ((FAR - NEAR) * radius), 0.0, 1.0)
+	draw_line(Vector2.ZERO, Vector2.from_angle(_sweep) * LENGTH * lerpf(2.0, 0.5, t), colors[hit], 1.5)

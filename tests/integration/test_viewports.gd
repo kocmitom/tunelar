@@ -94,9 +94,11 @@ func test_sonar() -> void:
 	check_eq(sonar.position, gm.tanks[0].global_position, "sonar on the tank")
 	check_eq(sonar.angles.size(), 1, "one other player")
 	check_near(sonar.angles[0], (gm.tanks[1].global_position - gm.tanks[0].global_position).angle(), 0.001, "points at the other tank")
+	check_near(sonar.distances[0], gm.tanks[0].global_position.distance_to(gm.tanks[1].global_position), 0.001, "knows the distance")
+	check_eq(sonar.colors[0], gm.tanks[1].color, "flares in the other tank's color")
 	gm.tanks[1].destroy()
 	manager.update_cameras()
-	check(sonar.angles.is_empty(), "dead tanks not tracked")
+	check(sonar.angles.is_empty() and sonar.distances.is_empty() and sonar.colors.is_empty(), "dead tanks not tracked")
 	manager.free()
 
 

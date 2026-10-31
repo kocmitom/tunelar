@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.16.2] - 2026-10-31
+
+### Changed
+- The radar sonar flares up in the color of the player it points at instead of yellow, and the closer that player is the longer the flare: twice the normal length within twice your view radius, shrinking linearly to half length at ten times your view radius and beyond.
+
 ## [0.16.1] - 2026-10-31
 
 ### Changed
