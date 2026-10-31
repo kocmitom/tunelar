@@ -4,6 +4,13 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.19.2] - 2026-10-31
+
+### Changed
+- Turret mode keeps the original driving keys: a lone player drives with WASD and the arrows as before, and everyone turns the turret with F/H, numpad 4/6 or the gamepad right stick.
+- The turret turns with the tank: its angle is kept relative to the tank front instead of fixed on the map.
+- The turret only turns up to 90 degrees to either side of the front, so it can no longer shoot behind the tank.
+
 ## [0.19.1] - 2026-10-31
 
 ### Changed

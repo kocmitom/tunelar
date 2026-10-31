@@ -35,8 +35,9 @@ const RADAR_PER_LEVEL := 0.25
 enum Special { SPREAD, LASER, JELLY, RADAR }
 const ENERGY_COST_LASER := 1.25
 const ENERGY_COST_SPREAD := ENERGY_COST_FIRE / 2.0
-# Radians per second the barrel turns in turret mode.
+# Radians per second the barrel turns in turret mode, up to TURRET_LIMIT either side of the front.
 const TURRET_SPEED := PI
+const TURRET_LIMIT := PI / 2.0
 
 static var _texture: ImageTexture
 static var _barrel_texture: ImageTexture
@@ -48,9 +49,10 @@ var color: Color = Color.WHITE
 var terrain: TerrainData
 var energy: float = MAX_ENERGY
 var shields: float = MAX_SHIELDS
-# Barrel direction; follows the movement unless the turret turns on its own.
+# Barrel direction: the tank front turned by turret_angle.
 var facing: Vector2 = Vector2.UP
 var turret: bool = false
+var turret_angle: float = 0.0
 var home_rect: Rect2i
 var is_dead: bool = false
 var fire_cooldown: float = 0.0
@@ -141,10 +143,8 @@ func step_movement(delta: float, input_dir: Vector2) -> void:
 		energy = maxf(0.0, energy - ENERGY_DRAIN_IDLE * delta)
 		return
 
-	if not turret:
-		facing = dir
+	facing = dir.rotated(turret_angle)
 	rotation = dir.angle() + PI / 2.0
-	barrel.global_rotation = facing.angle() + PI / 2.0
 
 	# The tunnel is DIG_MARGIN wider than the body; probe just outside it so solid earth always reads as DIRT.
 	var dig_radius := tank_radius + DIG_MARGIN
@@ -174,8 +174,9 @@ func step_movement(delta: float, input_dir: Vector2) -> void:
 
 
 func turn_turret(delta: float, turn: float) -> void:
-	facing = facing.rotated(turn * TURRET_SPEED * delta)
-	barrel.global_rotation = facing.angle() + PI / 2.0
+	turret_angle = clampf(turret_angle + turn * TURRET_SPEED * delta, -TURRET_LIMIT, TURRET_LIMIT)
+	facing = Vector2.UP.rotated(rotation + turret_angle)
+	barrel.rotation = turret_angle
 
 
 func try_fire() -> bool:
@@ -242,6 +243,7 @@ func respawn(pos: Vector2) -> void:
 	position = pos
 	rotation = 0.0
 	facing = Vector2.UP
+	turret_angle = 0.0
 	barrel.rotation = 0.0
 	velocity = Vector2.ZERO
 	energy = max_energy()

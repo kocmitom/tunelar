@@ -93,12 +93,14 @@ func test_turret_turns_on_its_own() -> void:
 	_drive(tank, Vector2.RIGHT, 0.2)
 	check_eq(tank.facing, Vector2.RIGHT, "without turret mode the barrel follows the movement")
 	tank.turret = true
-	_drive(tank, Vector2.DOWN, 0.2)
-	check_eq(tank.facing, Vector2.RIGHT, "turret mode keeps the barrel while driving")
 	tank.turn_turret(0.5, -1.0)
 	check(tank.facing.is_equal_approx(Vector2.UP), "turning left rotates counter-clockwise")
 	check(tank.fire_directions()[0].is_equal_approx(Vector2.UP), "shots follow the barrel")
-	check(is_equal_approx(tank.barrel.global_rotation, 0.0), "barrel sprite points along the barrel")
+	check(is_equal_approx(tank.barrel.rotation, -PI / 2.0), "barrel sprite points along the barrel")
+	tank.turn_turret(0.5, -1.0)
+	check(is_equal_approx(tank.turret_angle, -Tank.TURRET_LIMIT), "the barrel never turns behind the tank")
+	_drive(tank, Vector2.DOWN, 0.2)
+	check(tank.facing.is_equal_approx(Vector2.RIGHT), "the barrel turns with the tank")
 	tank.free()
 
 
