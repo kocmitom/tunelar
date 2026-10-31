@@ -110,9 +110,9 @@ func test_edge_is_rock() -> void:
 		var ok := true
 		for y in t.height:
 			for x in t.width:
-				if Vector2(x, y).distance_to(center) > TerrainData.EDGE_OUT * 320.0:
+				if maxf(absf(x - 320.0), absf(y - 320.0)) > TerrainData.EDGE_OUT * 320.0:
 					ok = ok and t.get_cell(x, y) == TerrainData.BEDROCK
-		check(ok, "seed %d is solid rock beyond EDGE_OUT, corners included" % map_seed)
+		check(ok, "seed %d is solid rock outside the EDGE_OUT square" % map_seed)
 		var angles: Array[float] = []
 		var on_ring := true
 		for rect in t.base_rects:
@@ -128,12 +128,12 @@ func test_edge_is_rock() -> void:
 		check(spread, "seed %d bases roughly evenly spaced" % map_seed)
 
 
-# Rock blobs inside the edge ring, which the edge rock never reaches.
+# Rock blobs inside the deepest bays, which the edge rock never reaches.
 func test_rocks_rare_and_clustered() -> void:
 	for map_seed in [1, 7, 42, 1234, 99999, 31337, 2026, 5]:
 		var t := TerrainData.new(640, 640)
 		t.generate(map_seed, 6)
-		var inner := TerrainData.EDGE_IN * 320.0
+		var inner := TerrainData.EDGE_DEEP * 320.0
 		var rock := {}
 		var disc := 0
 		for y in t.height:

@@ -37,10 +37,23 @@ const DRAIN_VALUE := 1.0
 # Bases sit evenly on a circle of RING_RADIUS half-sides, each shifted by up to RING_JITTER of the gap to its neighbors.
 const RING_RADIUS := 0.6
 const RING_JITTER := 0.15
-# Solid rock beyond a wobbly circle between EDGE_IN and EDGE_OUT half-sides, so the map reads as a cave and its edge is never reached.
+# Solid rock beyond a wobbly outline between the circle of EDGE_IN and EDGE_OUT half-sides, so the map reads as an irregular cave and its edge is never reached.
 const EDGE_IN := 0.76
 const EDGE_OUT := 0.9
-const EDGE_FREQUENCY := 0.015
+# Between the bases, away from their sides, bays reach in down to EDGE_DEEP half-sides.
+const EDGE_DEEP := 0.55
+# Clearance kept beside a base, in pixels, before the bays may deepen.
+const EDGE_BASE_CLEAR := 36.0
+# The outline is computed once per direction bin.
+const EDGE_BINS := 720
+# How far the outer limit bulges from the EDGE_OUT circle toward the EDGE_OUT square, into the corners.
+const EDGE_SQUARE := 0.5
+# Noise frequency around the unit circle, so every map size gets the same number of lobes.
+const EDGE_FREQUENCY := 1.2
+const EDGE_CONTRAST := 0.7
+# Pixel-scale roughness on top of the lobes, in half-sides, for rock fingers, bays and islands.
+const EDGE_ROUGH := 0.05
+const EDGE_ROUGH_FREQUENCY := 0.04
 
 var width: int
 var height: int
@@ -215,22 +228,40 @@ func _stamp_blob(cell: int, center: Vector2, radius: float, stretch: float, axis
 	return count
 
 
-# The noise depends only on the direction from the center, so the rock is one piece reaching in from the edge.
+# Lobes follow the direction from the center; the roughness adds fingers and islands without ever reaching inside the inner limit.
 func _stamp_edge(rng: RandomNumberGenerator) -> void:
 	var noise := FastNoiseLite.new()
 	noise.seed = rng.randi()
 	noise.frequency = EDGE_FREQUENCY
+	var rough := FastNoiseLite.new()
+	rough.seed = rng.randi()
+	rough.frequency = EDGE_ROUGH_FREQUENCY
 	var center := Vector2(width, height) / 2.0
 	var half := minf(width, height) / 2.0
+	var base_angles: Array[float] = []
+	for rect in base_rects:
+		base_angles.append((Vector2(rect.get_center()) - center).angle())
+	var clear_angle := EDGE_BASE_CLEAR / (RING_RADIUS * half)
+	var edges := PackedFloat32Array()
+	edges.resize(EDGE_BINS)
+	for i in EDGE_BINS:
+		var angle := -PI + TAU * (i + 0.5) / EDGE_BINS
+		var dir := Vector2.from_angle(angle)
+		var nearest := PI
+		for a in base_angles:
+			nearest = minf(nearest, absf(angle_difference(angle, a)))
+		var inner := lerpf(EDGE_IN, EDGE_DEEP, smoothstep(clear_angle, 2.0 * clear_angle, nearest))
+		var outer := lerpf(EDGE_OUT, EDGE_OUT / maxf(absf(dir.x), absf(dir.y)), EDGE_SQUARE)
+		var n := clampf(noise.get_noise_2d(dir.x, dir.y) * EDGE_CONTRAST + 0.5, 0.0, 1.0)
+		edges[i] = lerpf(inner + EDGE_ROUGH, outer - EDGE_ROUGH, n)
 	for y in height:
 		for x in width:
 			var offset := Vector2(x, y) - center
 			var d := offset.length() / half
-			if d < EDGE_IN:
+			if d < EDGE_DEEP:
 				continue
-			var dir := offset / (d * half)
-			var n := clampf(noise.get_noise_2d(dir.x * half, dir.y * half) * 0.5 + 0.5, 0.0, 1.0)
-			if d > lerpf(EDGE_IN, EDGE_OUT, n):
+			var bin := clampi(int((offset.angle() + PI) / TAU * EDGE_BINS), 0, EDGE_BINS - 1)
+			if d > edges[bin] + EDGE_ROUGH * rough.get_noise_2d(x, y):
 				cells[y * width + x] = BEDROCK
 
 

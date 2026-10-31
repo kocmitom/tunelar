@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.17.3] - 2026-10-31
+
+### Changed
+- The map outline is more irregular and less like a round blob: rock bays reach deeper into the map between the bases, lobes can push out toward the corners, and the edge has rough rock fingers and small islands. The area beside every base stays clear.
+
 ## [0.17.2] - 2026-10-31
 
 ### Changed
