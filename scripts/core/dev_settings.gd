@@ -14,6 +14,10 @@ var groups := [
 	["Explosion", Explosion, ["RADIUS", "DURATION"], ""],
 	["Jelly", Jelly, ["LIFETIME_TICKS", "RADIUS"], ""],
 	["Laser", Laser, ["LIFETIME"], ""],
+	["Worm", Worm, [
+		"SPEED", "SEGMENTS", "SEGMENT_SPACING", "RADIUS", "FILL_RADIUS", "TURN_RATE", "WIGGLE", "WIGGLE_TICKS",
+		"RETARGET_TICKS", "DISTANCE_PENALTY", "BASE_CLEARANCE", "SPAWN_DELAY_TICKS", "SPAWN_BASE_DISTANCE",
+	], "segments, spawn: next round"],
 	["GameManager", GameManager, ["KILLS_TO_WIN", "SHRAPNEL_COUNT", "MAP_AREA_PER_PLAYER", "MAP_ASPECT"], "map size: next match"],
 	["TerrainData", TerrainData, [
 		"ROCK_COVERAGE", "ROCK_RADIUS_MIN", "ROCK_RADIUS_MAX", "ROCK_STRETCH_MAX", "ROCK_WOBBLE",

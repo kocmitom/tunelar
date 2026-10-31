@@ -3,7 +3,7 @@ extends Node
 ## Output only: it never touches the simulation, so lockstep stays in sync.
 
 enum Style { OFF, ON }
-enum Kind { FIRE, LASER, DIG, IMPACT, RICOCHET, HIT, DESTROY, BUMP, PICKUP }
+enum Kind { FIRE, LASER, DIG, IMPACT, RICOCHET, HIT, DESTROY, BUMP, PICKUP, RUMBLE }
 enum Filter { LOW, HIGH, BAND }
 
 const RATE := 22050
@@ -19,14 +19,14 @@ const FAR := 320.0
 # Most voices of a kind at once; a new one cuts the oldest.
 const VOICE_CAPS := {
 	Kind.FIRE: 4, Kind.LASER: 4, Kind.DIG: 2, Kind.IMPACT: 4, Kind.RICOCHET: 3,
-	Kind.HIT: 3, Kind.DESTROY: 3, Kind.BUMP: 1, Kind.PICKUP: 2,
+	Kind.HIT: 3, Kind.DESTROY: 3, Kind.BUMP: 1, Kind.PICKUP: 2, Kind.RUMBLE: 1,
 }
 # Random gap in seconds before the next sound of a kind that repeats every tick.
-const GAPS := {Kind.DIG: Vector2(0.12, 0.2), Kind.BUMP: Vector2(0.3, 0.3)}
+const GAPS := {Kind.DIG: Vector2(0.12, 0.2), Kind.BUMP: Vector2(0.3, 0.3), Kind.RUMBLE: Vector2(0.35, 0.45)}
 # Synthesized sound lengths in seconds.
 const LENGTHS := {
 	Kind.FIRE: 0.32, Kind.LASER: 0.14, Kind.DIG: 0.1, Kind.IMPACT: 0.22, Kind.RICOCHET: 0.13,
-	Kind.HIT: 0.66, Kind.DESTROY: 2.33, Kind.BUMP: 0.11, Kind.PICKUP: 0.18,
+	Kind.HIT: 0.66, Kind.DESTROY: 2.33, Kind.BUMP: 0.11, Kind.PICKUP: 0.18, Kind.RUMBLE: 0.4,
 }
 
 var style: int = Style.ON
@@ -137,6 +137,9 @@ func _render_synth(kind: Kind) -> AudioStreamWAV:
 		Kind.PICKUP:
 			_tone(0.0, 0.3, 0.003, 0.07, 880.0, 880.0)
 			_tone(0.07, 0.3, 0.003, 0.1, 1320.0, 1320.0)
+		Kind.RUMBLE:
+			_noise(0.0, 0.8, 0.08, 0.3, Filter.LOW, 180.0, 120.0)
+			_tone(0.0, 0.6, 0.08, 0.3, 45.0, 38.0)
 	return _wav(SYNTH_LEVEL)
 
 

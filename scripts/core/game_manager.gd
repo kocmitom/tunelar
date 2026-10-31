@@ -31,6 +31,7 @@ var jelly: Jelly
 var bullets_root: Node2D
 var tanks: Array[Tank] = []
 var huds: Array[PlayerHud] = []
+var worms: Array[Worm] = []
 var round_over: bool = false
 var tick: int = 0
 # Seeded per match so every PC in a LAN match generates the same maps.
@@ -72,6 +73,7 @@ func setup(player_count: int, match_seed: int = randi(), local_slots: Array[int]
 	manager.build(local_slots, map_size)
 	tanks.clear()
 	huds.clear()
+	worms.clear()
 	rng.seed = match_seed
 
 	terrain = TerrainData.new(map_size.x, map_size.y)
@@ -121,6 +123,19 @@ func start_round(new_seed: int) -> void:
 	jelly.reset(map_size)
 	for bullet in bullets_root.get_children():
 		bullet.free()
+	for worm in worms:
+		worm.free()
+	worms.clear()
+	# One worm per 2 players, placed from the map seed so every PC agrees.
+	var worm_rng := RandomNumberGenerator.new()
+	worm_rng.seed = terrain.map_seed
+	for i in tanks.size() / 2:
+		var worm := Worm.new()
+		worm.terrain = terrain
+		worm.tanks = tanks
+		manager.world_root.add_child(worm)
+		worm.spawn(Worm.spawn_point(terrain, worm_rng))
+		worms.append(worm)
 	for i in tanks.size():
 		tanks[i].home_rect = terrain.base_rects[i]
 		tanks[i].money = 0
@@ -158,6 +173,8 @@ func simulate(inputs: Array[Dictionary]) -> void:
 	for bullet in bullets_root.get_children():
 		bullet.step(TICK_DT)
 	jelly.step()
+	for worm in worms:
+		worm.step(TICK_DT)
 
 	for tank in tanks:
 		if tank.is_dead:

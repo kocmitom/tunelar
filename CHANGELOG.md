@@ -4,6 +4,14 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-10-31
+
+### Added
+- Dune worms: one per 2 players (1 for 2-3 players, up to 3 for 6) wakes up 20 s into a round somewhere far from the bases. A worm swims through the ground without digging it, and its tail fills every tunnel it crosses back with dirt. Touching any part of it destroys a tank, whatever its shields, with no kill credited. It cannot be hurt.
+- Worms head for the most dug-out part of the map, weighed against the distance, so busy tunnel networks attract them, and an eaten-up network sends them on to the next one. They never go near a base.
+- A worm under the ground shows faintly, and only inside your sight; a low rumble lets you hear it coming through the dirt.
+- Worm values in the developer panel (F1).
+
 ## [0.22.1] - 2026-10-31
 
 ### Changed

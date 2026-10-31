@@ -13,6 +13,8 @@ const ENERGY := 5
 const DRAIN := 6
 
 const BORDER := 2
+# Side of the blocks air_chunks counts AIR in.
+const CHUNK := 16
 const BASE_SIZE := 33
 const BASE_DOOR := 11
 const PAD_SIZE := 9
@@ -64,6 +66,9 @@ var base_rects: Array[Rect2i] = []
 var dug_energy: int = 0
 var dug_drain: int = 0
 var dug_cells: int = 0
+# AIR cells per CHUNK x CHUNK block, row by row with chunk_cols blocks each; kept up to date through cells_changed.
+var air_chunks: PackedInt32Array
+var chunk_cols: int = 0
 
 
 func _init(w: int = 320, h: int = 200) -> void:
@@ -72,6 +77,9 @@ func _init(w: int = 320, h: int = 200) -> void:
 	cells.resize(width * height)
 	cells.fill(DIRT)
 	_stamp_border()
+	chunk_cols = ceili(float(width) / CHUNK)
+	air_chunks.resize(chunk_cols * ceili(float(height) / CHUNK))
+	cells_changed.connect(_count_air)
 
 
 func get_cell(x: int, y: int) -> int:
@@ -130,6 +138,38 @@ func dig_circle(cx: int, cy: int, radius: int) -> int:
 	if dug > 0:
 		cells_changed.emit(Rect2i(x0, y0, x1 - x0 + 1, y1 - y0 + 1))
 	return dug
+
+
+# Turns the AIR in the circle back into DIRT.
+func fill_circle(cx: int, cy: int, radius: int) -> void:
+	var x0 := maxi(cx - radius, 0)
+	var y0 := maxi(cy - radius, 0)
+	var x1 := mini(cx + radius, width - 1)
+	var y1 := mini(cy + radius, height - 1)
+	var r2 := radius * radius
+	var filled := false
+	for y in range(y0, y1 + 1):
+		for x in range(x0, x1 + 1):
+			var i := y * width + x
+			if (x - cx) * (x - cx) + (y - cy) * (y - cy) <= r2 and cells[i] == AIR:
+				cells[i] = DIRT
+				filled = true
+	if filled:
+		cells_changed.emit(Rect2i(x0, y0, x1 - x0 + 1, y1 - y0 + 1))
+
+
+# Recounts every chunk the rect touches.
+func _count_air(rect: Rect2i) -> void:
+	var c0 := rect.position / CHUNK
+	var c1 := (rect.end - Vector2i.ONE) / CHUNK
+	for cy in range(c0.y, c1.y + 1):
+		for cx in range(c0.x, c1.x + 1):
+			var x0 := cx * CHUNK
+			var x1 := mini(x0 + CHUNK, width)
+			var count := 0
+			for y in range(cy * CHUNK, mini(cy * CHUNK + CHUNK, height)):
+				count += cells.slice(y * width + x0, y * width + x1).count(AIR)
+			air_chunks[cy * chunk_cols + cx] = count
 
 
 # Upgrade pads in the base's inner corners, in Tank.Upgrade order: top-left, top-right, bottom-left, bottom-right.
