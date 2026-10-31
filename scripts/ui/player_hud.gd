@@ -4,18 +4,26 @@ extends CanvasLayer
 
 # In Tank.Special order.
 const SPECIAL_NAMES := ["5-WAY", "LASER", "JELLY", "RADAR"]
+# On-screen size of the 9x9 upgrade icons.
+const ICON_SIZE := 18
+
+# The base pad icons in white with a black outline, in Tank.Upgrade order.
+static var _upgrade_icons: Array[ImageTexture] = []
 
 var player_id: int = 0
 var color: Color = Color.WHITE
 
 @onready var energy_bar: ProgressBar = $EnergyBar
 @onready var shield_segments: Array = $Shields.get_children()
-@onready var money_label: Label = $MoneyLabel
+@onready var money_label: RichTextLabel = $MoneyLabel
 @onready var wins_label: Label = $WinsLabel
 @onready var banner: Label = $Banner
 
 
 func _ready() -> void:
+	if _upgrade_icons.is_empty():
+		for icon in TerrainRenderer.PAD_ICONS:
+			_upgrade_icons.append(_build_icon(icon))
 	banner.hide()
 
 
@@ -31,9 +39,14 @@ func update_hud(tank: Tank) -> void:
 	for i in shield_segments.size():
 		shield_segments[i].visible = i < tank.max_shields()
 		shield_segments[i].modulate.a = lerpf(0.15, 1.0, clampf(tank.shields - i, 0.0, 1.0))
-	money_label.text = "$ %d  SH %d  EN %d  SP %d  RA %d" % ([tank.money] + tank.levels)
+	money_label.clear()
+	money_label.add_text("$ %d" % tank.money)
+	for i in tank.levels.size():
+		money_label.add_text("  ")
+		money_label.add_image(_upgrade_icons[i], ICON_SIZE, ICON_SIZE)
+		money_label.add_text(" %d" % tank.levels[i])
 	if tank.special >= 0:
-		money_label.text += "  " + SPECIAL_NAMES[tank.special]
+		money_label.add_text("  " + SPECIAL_NAMES[tank.special])
 	wins_label.text = "P%d  KILLS %d/%d" % [player_id + 1, tank.kills, GameManager.KILLS_TO_WIN]
 
 
@@ -44,3 +57,19 @@ func show_banner(text: String) -> void:
 
 func hide_banner() -> void:
 	banner.hide()
+
+
+# "#" pixels white, "." pixels touching one black, the rest transparent.
+static func _build_icon(rows: Array) -> ImageTexture:
+	var size: int = rows.size()
+	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	for y in size:
+		for x in size:
+			if rows[y][x] == "#":
+				img.set_pixel(x, y, Color.WHITE)
+				continue
+			for dy in range(-1, 2):
+				for dx in range(-1, 2):
+					if x + dx >= 0 and y + dy >= 0 and x + dx < size and y + dy < size and rows[y + dy][x + dx] == "#":
+						img.set_pixel(x, y, Color.BLACK)
+	return ImageTexture.create_from_image(img)

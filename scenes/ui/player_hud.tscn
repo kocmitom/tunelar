@@ -58,14 +58,18 @@ size_flags_horizontal = 3
 mouse_filter = 2
 color = Color(0.25, 0.5, 1, 1)
 
-[node name="MoneyLabel" type="Label" parent="."]
+[node name="MoneyLabel" type="RichTextLabel" parent="."]
 offset_left = 8.0
 offset_top = 36.0
-offset_right = 268.0
+offset_right = 408.0
 offset_bottom = 59.0
+mouse_filter = 2
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 4
-text = "$ 0  SH 0  EN 0  SP 0  RA 0"
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+text = "$ 0"
 
 [node name="WinsLabel" type="Label" parent="."]
 anchors_preset = 1

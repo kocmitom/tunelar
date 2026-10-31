@@ -103,10 +103,11 @@ func setup(player_count: int, match_seed: int = randi(), local_slots: Array[int]
 	start_round(rng.randi())
 
 
-# Map area grows linearly with the player count (640x400 for 2 players, ~1107x692 for 6 on M).
+# Square map as wide as a MAP_ASPECT map whose area grows linearly with the player count (640x640 for 2 players, 1107x1107 for 6 on M).
 static func map_size_for(player_count: int, size_index: int = 1) -> Vector2i:
 	var h := int(sqrt(MAP_AREA_PER_PLAYER * MAP_AREA_SCALES[size_index] * maxi(player_count, 2) / MAP_ASPECT))
-	return Vector2i(int(h * MAP_ASPECT), h)
+	var side := int(h * MAP_ASPECT)
+	return Vector2i(side, side)
 
 
 func start_round(new_seed: int) -> void:

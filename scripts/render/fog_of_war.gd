@@ -12,6 +12,8 @@ const SPAWN_REVEAL_SCALE := 2
 const COLOR_FOG := Color8(34, 40, 64)
 # How far explored terrain is blended toward COLOR_FOG.
 const EXPLORED_DIM := 0.5
+# Depth of the fog frame drawn around the world, so the area past the map edge looks unexplored.
+const OUTSIDE := 4096.0
 
 var image: Image
 var terrain_image: Image
@@ -38,12 +40,23 @@ func reset(terrain: Image, pads: Image) -> void:
 	_explored.fill(0)
 	_view_radius = -1
 	_dirty = false
+	queue_redraw()
 
 
 func _process(_delta: float) -> void:
 	if _dirty:
 		texture.update(image)
 		_dirty = false
+
+
+func _draw() -> void:
+	if image == null:
+		return
+	var size := Vector2(image.get_size())
+	draw_rect(Rect2(-OUTSIDE, -OUTSIDE, size.x + 2.0 * OUTSIDE, OUTSIDE), COLOR_FOG)
+	draw_rect(Rect2(-OUTSIDE, size.y, size.x + 2.0 * OUTSIDE, OUTSIDE), COLOR_FOG)
+	draw_rect(Rect2(-OUTSIDE, 0.0, OUTSIDE, size.y), COLOR_FOG)
+	draw_rect(Rect2(size.x, 0.0, OUTSIDE, size.y), COLOR_FOG)
 
 
 # Explores the circle of radius, then moves the sight circle (SIGHT_SCALE times wider) to center.

@@ -80,38 +80,73 @@ func test_circle_passable() -> void:
 
 
 func test_generate_bases() -> void:
-	var t := TerrainData.new()
+	var t := TerrainData.new(640, 640)
 	t.generate(1234, 6)
 	check_eq(t.base_rects.size(), 6, "six bases")
 	var ok := true
+	var clear := true
 	for rect in t.base_rects:
 		var c := rect.get_center()
 		ok = ok and t.get_cell(c.x, c.y) == TerrainData.BASE_START
 		ok = ok and t.is_circle_passable(c.x, rect.position.y, 3) and t.is_circle_passable(c.x, rect.end.y - 1, 3)
+		var around := rect.grow(6)
+		for y in range(around.position.y, around.end.y):
+			for x in range(around.position.x, around.end.x):
+				clear = clear and (rect.has_point(Vector2i(x, y)) or t.get_cell(x, y) != TerrainData.BEDROCK)
 	check(ok, "base interiors and doors are open")
-	var copy := TerrainData.new()
+	check(clear, "no rock within 6 px of a base")
+	var copy := TerrainData.new(640, 640)
 	copy.generate(1234, 6)
 	check(copy.cells == t.cells, "generation is deterministic per seed")
 	copy.generate(99, 6)
 	check(copy.cells != t.cells, "different seed differs")
 
 
-func test_rocks_rare_and_clustered() -> void:
-	for map_seed in [1, 7, 42, 1234, 99999, 31337, 2026, 5]:
-		var t := TerrainData.new()
+func test_edge_is_rock() -> void:
+	for map_seed in [1, 42, 2026]:
+		var t := TerrainData.new(640, 640)
 		t.generate(map_seed, 6)
-		var rock := {}
-		var interior := 0
+		var center := Vector2(320, 320)
+		var ok := true
 		for y in t.height:
 			for x in t.width:
+				if Vector2(x, y).distance_to(center) > TerrainData.EDGE_OUT * 320.0:
+					ok = ok and t.get_cell(x, y) == TerrainData.BEDROCK
+		check(ok, "seed %d is solid rock beyond EDGE_OUT, corners included" % map_seed)
+		var angles: Array[float] = []
+		var on_ring := true
+		for rect in t.base_rects:
+			var offset := Vector2(rect.get_center()) - center
+			on_ring = on_ring and absf(offset.length() - TerrainData.RING_RADIUS * 320.0) < 2.0
+			angles.append(offset.angle())
+		check(on_ring, "seed %d bases on the ring" % map_seed)
+		angles.sort()
+		var spread := true
+		for i in angles.size():
+			var gap := fposmod(angles[(i + 1) % angles.size()] - angles[i], TAU)
+			spread = spread and absf(gap - TAU / 6.0) <= 2.0 * TerrainData.RING_JITTER * TAU / 6.0 + 0.01
+		check(spread, "seed %d bases roughly evenly spaced" % map_seed)
+
+
+# Rock blobs inside the edge ring, which the edge rock never reaches.
+func test_rocks_rare_and_clustered() -> void:
+	for map_seed in [1, 7, 42, 1234, 99999, 31337, 2026, 5]:
+		var t := TerrainData.new(640, 640)
+		t.generate(map_seed, 6)
+		var inner := TerrainData.EDGE_IN * 320.0
+		var rock := {}
+		var disc := 0
+		for y in t.height:
+			for x in t.width:
+				if Vector2(x, y).distance_to(Vector2(320, 320)) >= inner:
+					continue
+				disc += 1
 				var in_base := false
 				for rect in t.base_rects:
 					in_base = in_base or rect.has_point(Vector2i(x, y))
 				if not in_base and t.get_cell(x, y) == TerrainData.BEDROCK:
 					rock[Vector2i(x, y)] = true
-					var on_border := x < TerrainData.BORDER or y < TerrainData.BORDER or x >= t.width - TerrainData.BORDER or y >= t.height - TerrainData.BORDER
-					interior += 0 if on_border else 1
-		var coverage := float(interior) / (t.width * t.height)
+		var coverage := float(rock.size()) / disc
 		check(coverage > 0.02 and coverage < 0.08, "seed %d rock coverage %.3f" % [map_seed, coverage])
 
 		var smallest := 1 << 30
@@ -120,23 +155,26 @@ func test_rocks_rare_and_clustered() -> void:
 			if seen.has(start):
 				continue
 			var size := 0
+			var cut := false
 			var stack: Array[Vector2i] = [start]
 			seen[start] = true
 			while not stack.is_empty():
 				var p: Vector2i = stack.pop_back()
 				size += 1
+				cut = cut or Vector2(p).distance_to(Vector2(320, 320)) >= inner - 1.5
 				for n in [p + Vector2i.LEFT, p + Vector2i.RIGHT, p + Vector2i.UP, p + Vector2i.DOWN]:
 					if rock.has(n) and not seen.has(n):
 						seen[n] = true
 						stack.append(n)
-			smallest = mini(smallest, size)
+			if not cut:
+				smallest = mini(smallest, size)
 		check(smallest >= 12, "seed %d has no rock specks (smallest formation %d cells)" % [map_seed, smallest])
 
 
 func test_gold_and_energy_scattered_outside_bases() -> void:
 	for cell in [TerrainData.GOLD, TerrainData.ENERGY, TerrainData.DRAIN]:
 		for map_seed in [1, 7, 42, 1234, 99999, 31337, 2026, 5]:
-			var t := TerrainData.new()
+			var t := TerrainData.new(640, 640)
 			t.generate(map_seed, 6)
 			var found := 0
 			var in_base := 0

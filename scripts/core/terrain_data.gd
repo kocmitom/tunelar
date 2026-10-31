@@ -34,8 +34,13 @@ const ENERGY_VALUE := 1.0
 # Red blobs the size of energy blobs; each dug cell drains DRAIN_VALUE from the battery.
 const DRAIN_COVERAGE := 0.005
 const DRAIN_VALUE := 1.0
-# Slot order spreads the first bases far apart on the 3x2 region grid.
-const SLOT_ORDER: Array[int] = [0, 5, 2, 3, 1, 4]
+# Bases sit evenly on a circle of RING_RADIUS half-sides, each shifted by up to RING_JITTER of the gap to its neighbors.
+const RING_RADIUS := 0.6
+const RING_JITTER := 0.15
+# Solid rock beyond a wobbly circle between EDGE_IN and EDGE_OUT half-sides, so the map reads as a cave and its edge is never reached.
+const EDGE_IN := 0.76
+const EDGE_OUT := 0.9
+const EDGE_FREQUENCY := 0.015
 
 var width: int
 var height: int
@@ -138,18 +143,19 @@ func generate(new_seed: int, base_count: int) -> void:
 	_stamp_border()
 
 	base_rects.clear()
-	var region := Vector2i(width / 3, height / 2)
-	var max_jitter := (region - Vector2i(BASE_SIZE, BASE_SIZE)) / 2 - Vector2i(6, 6)
-	for i in mini(base_count, SLOT_ORDER.size()):
-		var slot := SLOT_ORDER[i]
-		var center := Vector2i((slot % 3) * region.x + region.x / 2, (slot / 3) * region.y + region.y / 2)
-		center += Vector2i(rng.randi_range(-max_jitter.x, max_jitter.x), rng.randi_range(-max_jitter.y, max_jitter.y))
-		base_rects.append(Rect2i(center - Vector2i(BASE_SIZE / 2, BASE_SIZE / 2), Vector2i(BASE_SIZE, BASE_SIZE)))
+	var center := Vector2(width, height) / 2.0
+	var ring := RING_RADIUS * minf(width, height) / 2.0
+	var start := rng.randf() * TAU
+	for i in base_count:
+		var angle := start + TAU * (i + rng.randf_range(-RING_JITTER, RING_JITTER)) / base_count
+		var c := Vector2i((center + Vector2.from_angle(angle) * ring).round())
+		base_rects.append(Rect2i(c - Vector2i(BASE_SIZE / 2, BASE_SIZE / 2), Vector2i(BASE_SIZE, BASE_SIZE)))
 
 	_place_blobs(rng, BEDROCK, ROCK_COVERAGE, ROCK_RADIUS_MIN, ROCK_RADIUS_MAX)
 	_place_blobs(rng, GOLD, GOLD_COVERAGE, GOLD_RADIUS_MIN, GOLD_RADIUS_MAX)
 	_place_blobs(rng, ENERGY, ENERGY_COVERAGE, ENERGY_RADIUS_MIN, ENERGY_RADIUS_MAX)
 	_place_blobs(rng, DRAIN, DRAIN_COVERAGE, ENERGY_RADIUS_MIN, ENERGY_RADIUS_MAX)
+	_stamp_edge(rng)
 	for rect in base_rects:
 		_stamp_base(rect)
 
@@ -207,6 +213,25 @@ func _stamp_blob(cell: int, center: Vector2, radius: float, stretch: float, axis
 				visited[n] = true
 				stack.append(n)
 	return count
+
+
+# The noise depends only on the direction from the center, so the rock is one piece reaching in from the edge.
+func _stamp_edge(rng: RandomNumberGenerator) -> void:
+	var noise := FastNoiseLite.new()
+	noise.seed = rng.randi()
+	noise.frequency = EDGE_FREQUENCY
+	var center := Vector2(width, height) / 2.0
+	var half := minf(width, height) / 2.0
+	for y in height:
+		for x in width:
+			var offset := Vector2(x, y) - center
+			var d := offset.length() / half
+			if d < EDGE_IN:
+				continue
+			var dir := offset / (d * half)
+			var n := clampf(noise.get_noise_2d(dir.x * half, dir.y * half) * 0.5 + 0.5, 0.0, 1.0)
+			if d > lerpf(EDGE_IN, EDGE_OUT, n):
+				cells[y * width + x] = BEDROCK
 
 
 func _stamp_border() -> void:

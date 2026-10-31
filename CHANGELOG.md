@@ -4,6 +4,14 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-10-31
+
+### Changed
+- The map is a square as wide as the old map of the same size, so a 2-player M map is 640x640 instead of 640x400.
+- Bases are placed on an invisible circle around the map center, evenly spaced with a random rotation and a little jitter, so every player is roughly the same distance from their neighbors and has plenty of room toward the edge.
+- The map edge is a thick, wavy wall of solid rock that fills the corners, so the playable area looks like a cave instead of a square. The camera always stays centered on your tank, and everything past the map looks like unexplored fog, so you cannot tell where the map ends.
+- The money line shows the base pad icons in white instead of the SH / EN / SP / RA names.
+
 ## [0.16.6] - 2026-10-31
 
 ### Changed

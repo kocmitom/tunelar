@@ -29,6 +29,28 @@ func test_six_containers_share_world() -> void:
 	manager.free()
 
 
+func test_hud_upgrade_icons() -> void:
+	var manager := _make_grid(2)
+	var gm: GameManager = manager.get_node("GameManager")
+	var hud := gm.huds[0]
+	gm.tanks[0].levels = [1, 2, 3, 4]
+	hud.update_hud(gm.tanks[0])
+	var text := hud.money_label.get_parsed_text()
+	check(text.begins_with("$ "), "money first (got %s)" % text)
+	check(not (text.contains("SH") or text.contains("EN") or text.contains("SP") or text.contains("RA")), "no two-letter upgrade names")
+	check(text.contains("4"), "levels still shown")
+	var ok := true
+	for i in TerrainRenderer.PAD_ICONS.size():
+		var img: Image = PlayerHud._upgrade_icons[i].get_image()
+		for y in img.get_height():
+			for x in img.get_width():
+				var lit: bool = TerrainRenderer.PAD_ICONS[i][y][x] == "#"
+				var c := img.get_pixel(x, y)
+				ok = ok and (c == Color.WHITE if lit else (c == Color.BLACK or c.a == 0.0))
+	check(ok, "icons are the base pad icons in white, outlined in black")
+	manager.free()
+
+
 func test_rebuild_with_fewer_players() -> void:
 	var manager := _make_grid(6)
 	var gm: GameManager = manager.get_node("GameManager")

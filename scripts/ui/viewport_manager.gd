@@ -14,6 +14,7 @@ var sonars: Array[Sonar] = []
 var tanks: Array[Tank] = []
 var slots: Array[int] = []
 var world_root: Node2D
+var map_size: Vector2
 var map_shown: bool = false
 
 @onready var grid: GridContainer = $GridContainer
@@ -28,7 +29,7 @@ func _ready() -> void:
 
 
 # One viewport per local slot; viewport i follows tanks[local_slots[i]].
-func build(local_slots: Array[int], map_size: Vector2i) -> void:
+func build(local_slots: Array[int], world_size: Vector2i) -> void:
 	for child in grid.get_children():
 		child.free()
 	viewports.clear()
@@ -38,6 +39,7 @@ func build(local_slots: Array[int], map_size: Vector2i) -> void:
 	sonars.clear()
 	tanks.clear()
 	slots = local_slots
+	map_size = world_size
 	var count := local_slots.size()
 	grid.columns = 3 if count > 4 else (2 if count > 1 else 1)
 
@@ -67,10 +69,6 @@ func build(local_slots: Array[int], map_size: Vector2i) -> void:
 		cam.name = "Camera2D_%d" % (i + 1)
 		cam.zoom = Vector2(camera_zoom, camera_zoom)
 		cam.process_callback = Camera2D.CAMERA2D_PROCESS_PHYSICS
-		cam.limit_left = 0
-		cam.limit_top = 0
-		cam.limit_right = map_size.x
-		cam.limit_bottom = map_size.y
 		viewport.add_child(cam)
 		cam.make_current()
 
@@ -138,7 +136,7 @@ func update_cameras(inputs: Array[Dictionary] = [], delta: float = 0.0) -> void:
 			if not inputs.is_empty():
 				var half := Vector2(viewports[i].size) / cam.zoom / 2.0
 				var pos: Vector2 = cam.global_position + inputs[slots[i]]["move"] * SPECTATE_SPEED * delta
-				cam.global_position = pos.clamp(half, Vector2(cam.limit_right, cam.limit_bottom) - half)
+				cam.global_position = pos.clamp(half, map_size - half)
 		else:
 			cam.global_position = tank.global_position
 			fogs[i].visible = true

@@ -25,7 +25,7 @@ func _press(gm: GameManager, keycode: Key, pressed: bool) -> void:
 
 
 func test_map_grows_with_players() -> void:
-	check_eq(GameManager.map_size_for(2), Vector2i(640, 400), "2-player map")
+	check_eq(GameManager.map_size_for(2), Vector2i(640, 640), "2-player map is square")
 	var previous := 0
 	var ok := true
 	for n in range(2, 7):
@@ -43,7 +43,7 @@ func test_map_grows_with_players() -> void:
 	check_eq(GameManager.map_size_for(2, 1), GameManager.map_size_for(2), "M is the default")
 	var gm := _make_game(6)
 	check_eq(Vector2i(gm.terrain.width, gm.terrain.height), GameManager.map_size_for(6), "game uses the scaled size")
-	check_eq(gm.manager.cameras[0].limit_right, gm.terrain.width, "camera limits match the map")
+	check(gm.manager.cameras[0].limit_right > gm.terrain.width and gm.manager.cameras[0].limit_left < 0, "camera never stops at the map edge")
 	gm.manager.free()
 
 
