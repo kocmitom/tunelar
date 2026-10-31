@@ -32,6 +32,7 @@ const RADAR_PER_LEVEL := 0.25
 # Free switches on the pads of other players' bases, in Upgrade pad order; one is active at a time.
 enum Special { SPREAD, LASER, JELLY, RADAR }
 const ENERGY_COST_LASER := 10.0
+const ENERGY_COST_SPREAD := ENERGY_COST_FIRE / 2.0
 
 static var _texture: ImageTexture
 
@@ -165,7 +166,11 @@ func step_movement(delta: float, input_dir: Vector2) -> void:
 
 
 func try_fire() -> bool:
-	var cost := ENERGY_COST_LASER if special == Special.LASER else ENERGY_COST_FIRE
+	var cost := ENERGY_COST_FIRE
+	if special == Special.LASER:
+		cost = ENERGY_COST_LASER
+	elif special == Special.SPREAD:
+		cost = ENERGY_COST_SPREAD
 	if is_dead or energy < cost or fire_cooldown > 0.0 or _in_base():
 		return false
 	energy -= cost

@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.15.1] - 2026-10-31
+
+### Changed
+- A 5-way cannon volley costs 4 energy, half of a normal shot.
+
 ## [0.15.0] - 2026-10-31
 
 ### Changed

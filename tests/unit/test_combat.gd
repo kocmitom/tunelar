@@ -117,6 +117,8 @@ func test_spread_fire_directions() -> void:
 	check_eq(dirs.size(), 5, "five directions")
 	for expected in [Vector2.RIGHT, Vector2(1, 1).normalized(), Vector2(1, -1).normalized(), Vector2.UP, Vector2.DOWN]:
 		check(dirs.any(func(d: Vector2) -> bool: return d.is_equal_approx(expected)), "fires toward %s" % expected)
+	check(tank.try_fire(), "5-way fires")
+	check_eq(tank.energy, Tank.MAX_ENERGY - Tank.ENERGY_COST_FIRE / 2.0, "5-way costs half a shot")
 	tank.free()
 
 
