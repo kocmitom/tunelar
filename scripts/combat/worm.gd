@@ -3,6 +3,7 @@ extends Node2D
 ## Dune worm: swims through the ground without digging, refills the tunnels it crosses behind its tail and destroys any tank it touches.
 ## It heads for the CHUNK with the most AIR, weighed against the distance, and keeps away from the bases.
 ## HEALTH shots turn its body into gold and bring it back at once, as far from the tanks as it can get.
+## Every SPICE_MIN_TICKS to SPICE_MAX_TICKS it leaves a spice pocket at its tail.
 
 static var SPEED := 12.0
 static var SEGMENTS := 8
@@ -24,6 +25,8 @@ static var SPAWN_DELAY_TICKS := 20 * GameManager.TICK_RATE
 static var SPAWN_BASE_DISTANCE := 96.0
 # Bullet or laser hits that kill it.
 static var HEALTH := 5
+static var SPICE_MIN_TICKS := 15 * GameManager.TICK_RATE
+static var SPICE_MAX_TICKS := 25 * GameManager.TICK_RATE
 const COLOR := Color8(222, 190, 120)
 const COLOR_HEAD := Color8(150, 105, 60)
 # Alpha of segments under the ground.
@@ -40,6 +43,8 @@ var dormant: int = SPAWN_DELAY_TICKS
 var health: int = HEALTH
 # Seeded from the map so every PC respawns it at the same spot.
 var rng := RandomNumberGenerator.new()
+# Ticks left until the next spice pocket.
+var spice_ticks: int = 0
 var _ticks: int = 0
 
 
@@ -54,6 +59,7 @@ func spawn(pos: Vector2) -> void:
 	position = pos
 	target = pos
 	_ticks = 0
+	spice_ticks = rng.randi_range(SPICE_MIN_TICKS, SPICE_MAX_TICKS)
 	reset_physics_interpolation()
 
 
@@ -122,6 +128,10 @@ func step(delta: float) -> void:
 			body[i] = body[i - 1] + gap.normalized() * SEGMENT_SPACING
 	var tail := body[body.size() - 1]
 	terrain.fill_circle(roundi(tail.x), roundi(tail.y), FILL_RADIUS)
+	spice_ticks -= 1
+	if spice_ticks <= 0:
+		terrain.fill_circle(roundi(tail.x), roundi(tail.y), SpiceBlow.POCKET_RADIUS, TerrainData.SPICE)
+		spice_ticks = rng.randi_range(SPICE_MIN_TICKS, SPICE_MAX_TICKS)
 	position = body[0]
 	Sfx.play(Sfx.Kind.RUMBLE, body[0])
 

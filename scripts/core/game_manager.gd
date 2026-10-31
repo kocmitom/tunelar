@@ -79,6 +79,7 @@ func setup(player_count: int, match_seed: int = randi(), local_slots: Array[int]
 	rng.seed = match_seed
 
 	terrain = TerrainData.new(map_size.x, map_size.y)
+	terrain.spice_hit.connect(_on_spice_hit)
 	renderer = TerrainRenderer.new()
 	renderer.base_colors = PLAYER_COLORS.slice(0, player_count)
 	manager.world_root.add_child(renderer)
@@ -264,3 +265,9 @@ func _on_tank_destroyed(tank: Tank, attacker: Tank) -> void:
 		bullet.velocity = Vector2.from_angle(TAU * i / SHRAPNEL_COUNT) * Bullet.BULLET_SPEED
 		bullets_root.add_child(bullet)
 		bullet.reset_physics_interpolation()
+
+
+func _on_spice_hit(cell: Vector2i, attacker: Tank) -> void:
+	var blow := SpiceBlow.new()
+	manager.world_root.add_child(blow)
+	blow.detonate(terrain, tanks, cell, attacker)

@@ -3,6 +3,8 @@ extends RefCounted
 ## Pure grid model of the destructible terrain. One byte per cell.
 
 signal cells_changed(rect: Rect2i)
+# Something reached a SPICE cell; attacker is credited with the blow's kills.
+signal spice_hit(cell: Vector2i, attacker: Tank)
 
 const AIR := 0
 const DIRT := 1
@@ -11,6 +13,8 @@ const BASE_START := 3
 const GOLD := 4
 const ENERGY := 5
 const DRAIN := 6
+# Spice pockets the worm leaves; reaching one sets off a SpiceBlow.
+const SPICE := 7
 
 const BORDER := 2
 # Side of the blocks air_chunks counts AIR in.
@@ -62,9 +66,10 @@ var height: int
 var cells: PackedByteArray
 var map_seed: int = 0
 var base_rects: Array[Rect2i] = []
-# Energy and drain cells removed by the last dig_circle call.
+# Energy, drain and spice cells removed by the last dig_circle call.
 var dug_energy: int = 0
 var dug_drain: int = 0
+var dug_spice: int = 0
 var dug_cells: int = 0
 # AIR cells per CHUNK x CHUNK block, row by row with chunk_cols blocks each; kept up to date through cells_changed.
 var air_chunks: PackedInt32Array
@@ -96,7 +101,7 @@ func set_cell(x: int, y: int, value: int) -> void:
 
 
 static func is_diggable(cell: int) -> bool:
-	return cell == DIRT or cell == GOLD or cell == ENERGY or cell == DRAIN
+	return cell == DIRT or cell == GOLD or cell == ENERGY or cell == DRAIN or cell == SPICE
 
 
 func is_passable(x: int, y: int) -> bool:
@@ -121,6 +126,7 @@ func dig_circle(cx: int, cy: int, radius: int) -> int:
 	var dug := 0
 	dug_energy = 0
 	dug_drain = 0
+	dug_spice = 0
 	dug_cells = 0
 	for y in range(y0, y1 + 1):
 		for x in range(x0, x1 + 1):
@@ -133,6 +139,7 @@ func dig_circle(cx: int, cy: int, radius: int) -> int:
 				dug += GOLD_VALUE if cells[i] == GOLD else 1
 				dug_energy += 1 if cells[i] == ENERGY else 0
 				dug_drain += 1 if cells[i] == DRAIN else 0
+				dug_spice += 1 if cells[i] == SPICE else 0
 				dug_cells += 1
 				cells[i] = AIR
 	if dug > 0:
@@ -156,6 +163,28 @@ func fill_circle(cx: int, cy: int, radius: int, cell: int = DIRT) -> void:
 				filled = true
 	if filled:
 		cells_changed.emit(Rect2i(x0, y0, x1 - x0 + 1, y1 - y0 + 1))
+
+
+# Clears the DIRT and SPICE in the circle and returns the SPICE cells it cleared; everything else stays.
+func blow_circle(cx: int, cy: int, radius: int) -> Array[Vector2i]:
+	var x0 := maxi(cx - radius, 0)
+	var y0 := maxi(cy - radius, 0)
+	var x1 := mini(cx + radius, width - 1)
+	var y1 := mini(cy + radius, height - 1)
+	var r2 := radius * radius
+	var spice: Array[Vector2i] = []
+	for y in range(y0, y1 + 1):
+		for x in range(x0, x1 + 1):
+			var i := y * width + x
+			if (x - cx) * (x - cx) + (y - cy) * (y - cy) > r2:
+				continue
+			if cells[i] == SPICE:
+				spice.append(Vector2i(x, y))
+				cells[i] = AIR
+			elif cells[i] == DIRT:
+				cells[i] = AIR
+	cells_changed.emit(Rect2i(x0, y0, x1 - x0 + 1, y1 - y0 + 1))
+	return spice
 
 
 # Recounts every chunk the rect touches.

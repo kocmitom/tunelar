@@ -24,6 +24,8 @@ func fire(dir: Vector2) -> void:
 			break
 		var cell := terrain.get_cell(roundi(p.x), roundi(p.y))
 		if cell != TerrainData.AIR and cell != TerrainData.BASE_START:
+			if cell == TerrainData.SPICE:
+				terrain.spice_hit.emit(Vector2i(p.round()), shooter)
 			break
 		var target := _tank_at(p)
 		if target:

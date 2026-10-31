@@ -9,6 +9,8 @@ const BEDROCK_COLORS: Array[Color] = [Color8(112, 112, 124), Color8(96, 96, 108)
 const GOLD_COLORS: Array[Color] = [Color8(255, 200, 40), Color8(230, 175, 20)]
 const ENERGY_COLORS: Array[Color] = [Color8(70, 170, 255), Color8(40, 140, 235)]
 const DRAIN_COLORS: Array[Color] = [Color8(220, 30, 30), Color8(190, 15, 20)]
+# Cinnamon with a bright speck.
+const SPICE_COLORS: Array[Color] = [Color8(224, 112, 42), Color8(200, 90, 30), Color8(255, 176, 80)]
 const BASE_FLOOR_DARKEN := 0.75
 # Pad tint and icon color in Tank.Upgrade order.
 const PAD_COLORS: Array[Color] = [Color8(70, 120, 255), Color8(255, 210, 60), Color8(90, 230, 90), Color8(80, 230, 230)]
@@ -171,6 +173,8 @@ func _color_at(x: int, y: int) -> Color:
 			return ENERGY_COLORS[noise % 2]
 		TerrainData.DRAIN:
 			return DRAIN_COLORS[noise % 2]
+		TerrainData.SPICE:
+			return SPICE_COLORS[noise % 3]
 		TerrainData.BASE_START:
 			return COLOR_BASE
 	return COLOR_AIR

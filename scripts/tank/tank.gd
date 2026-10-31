@@ -169,6 +169,9 @@ func step_movement(delta: float, input_dir: Vector2) -> void:
 	energy = clampf(energy + terrain.dug_energy * TerrainData.ENERGY_VALUE - terrain.dug_drain * TerrainData.DRAIN_VALUE - terrain.dug_cells * ENERGY_PER_DUG_CELL, 0.0, max_energy())
 	if special == Special.JELLY:
 		jelly.lay(global_position, player_id, color)
+	# Digging into spice sets it off, with the digger in the blow.
+	if terrain.dug_spice > 0:
+		terrain.spice_hit.emit(Vector2i(global_position.round()), self)
 
 
 func try_fire() -> bool:
@@ -227,6 +230,9 @@ func destroy(attacker: Tank = null) -> void:
 	explosion.position = position
 	get_parent().add_child(explosion)
 	explosion.detonate(terrain)
+	# A crater reaching spice sets it off for whoever destroyed this tank.
+	if terrain.dug_spice > 0:
+		terrain.spice_hit.emit(Vector2i(position.round()), attacker)
 	destroyed.emit(self, attacker)
 
 

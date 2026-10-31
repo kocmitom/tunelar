@@ -4,6 +4,14 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.26.0] - 2026-10-31
+
+### Added
+- Spice pockets: every 15 to 25 s the dune worm leaves a small cinnamon-orange pocket of spice in the sand behind its tail. Pockets stay visible in explored fog, like gold.
+- A spice blow: shooting a pocket (bullet, shrapnel or laser), digging into it, or a tank's death crater reaching it blows away all the sand within 54 px, the sight radius of a level 1 radar. Gold, energy, drain veins, rock and bases stay. Every tank in the blow is destroyed whatever its shields, except in its own base, and the player who set it off gets the kills; a digger who sets one off dies in it but still gets the kills.
+- Pockets within a blow blow too, so one shot can set off a whole chain along the worm's trail.
+- Spice values in the developer panel (F1): the worm's laying interval and the blow radius, pocket size and ring duration.
+
 ## [0.25.0] - 2026-10-31
 
 ### Added
