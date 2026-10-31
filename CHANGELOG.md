@@ -4,6 +4,15 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.24.1] - 2026-10-31
+
+### Changed
+- Dune worms are half as fast: 12 px/s instead of 24.
+- The worm's sand road is thinner: its tail refills a radius of 3 px instead of 5, so a tank tunnel keeps a 1-2 px open strip along each edge instead of being sealed completely.
+
+### Fixed
+- A worm with no tunnels anywhere on the map no longer circles on the spot; it keeps going straight ahead.
+
 ## [0.24.0] - 2026-10-31
 
 ### Added

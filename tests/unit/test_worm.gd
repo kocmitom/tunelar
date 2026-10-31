@@ -49,7 +49,7 @@ func test_air_chunks() -> void:
 func test_swims_without_digging() -> void:
 	var terrain := TerrainData.new()
 	var worm := _worm(terrain, Vector2(100, 100))
-	_run(worm, 2.0)
+	_run(worm, 4.0)
 	check(worm.body[0].distance_to(Vector2(100, 100)) > 20.0, "worm moved (head at %s)" % worm.body[0])
 	check_eq(terrain.cells.count(TerrainData.AIR), 0, "no dirt dug")
 	check(worm.visible, "awake worm shown")
@@ -60,9 +60,11 @@ func test_refills_corridor() -> void:
 	var terrain := _corridor()
 	var before := terrain.cells.count(TerrainData.AIR)
 	var worm := _worm(terrain, Vector2(60, 100))
-	_run(worm, 3.0)
+	worm.step(DT)
 	check_eq(terrain.get_cell(60, 100), TerrainData.DIRT, "tunnel under the tail refilled")
-	check_eq(terrain.get_cell(60, 105), TerrainData.DIRT, "the whole tunnel width refilled")
+	check_eq(terrain.get_cell(60, 100 + Worm.FILL_RADIUS), TerrainData.DIRT, "refilled up to FILL_RADIUS")
+	check_eq(terrain.get_cell(60, 100 + Worm.FILL_RADIUS + 1), TerrainData.AIR, "tunnel edge beyond FILL_RADIUS stays open")
+	_run(worm, 3.0)
 	check(terrain.cells.count(TerrainData.AIR) < before, "less air after the worm")
 	worm.free()
 
@@ -97,7 +99,7 @@ func test_targets_dug_pocket() -> void:
 	terrain.base_rects = []
 	terrain.fill_circle(250, 150, 12)
 	terrain.fill_circle(60, 50, 2)
-	check_eq(worm.best_target(), worm.body[0], "no air keeps the head as target")
+	check(worm.best_target().distance_to(worm.body[0] + worm.heading * TerrainData.CHUNK * 4) < 0.01, "no air heads straight on")
 	worm.free()
 
 

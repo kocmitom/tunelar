@@ -3,12 +3,12 @@ extends Node2D
 ## Dune worm: swims through the ground without digging, refills the tunnels it crosses behind its tail and destroys any tank it touches.
 ## It heads for the CHUNK with the most AIR, weighed against the distance, and keeps away from the bases.
 
-static var SPEED := 24.0
+static var SPEED := 12.0
 static var SEGMENTS := 8
 static var SEGMENT_SPACING := 3.0
 static var RADIUS := 3
-# Wide enough to seal a whole tank tunnel.
-static var FILL_RADIUS := 5
+# Radius of the sand road the tail leaves across open tunnels.
+static var FILL_RADIUS := 3
 static var TURN_RATE := PI / 2.0
 # Heading sway around the target direction, in radians, with a period of WIGGLE_TICKS.
 static var WIGGLE := 0.5
@@ -100,10 +100,10 @@ func step(delta: float) -> void:
 	queue_redraw()
 
 
-# Center of the chunk with the best score outside the base no-go zones, or the head when no chunk has AIR.
+# Center of the chunk with the best score outside the base no-go zones, or a few chunks straight ahead when no chunk has AIR.
 func best_target() -> Vector2:
 	var best := -INF
-	var best_pos := body[0]
+	var best_pos := body[0] + heading * TerrainData.CHUNK * 4
 	var c := TerrainData.CHUNK
 	for i in terrain.air_chunks.size():
 		var air := terrain.air_chunks[i]
