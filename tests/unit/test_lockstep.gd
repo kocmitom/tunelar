@@ -46,6 +46,7 @@ func test_disconnected_slot_is_idle() -> void:
 func test_slot_order_groups_local_players() -> void:
 	var order := NetScript.slot_order({1: ["a", "b"], 3: ["c"], 2: ["d"]})
 	check_eq(order, [1, 1, 2, 3] as Array[int], "peers ascending, then local players")
+	check_eq(NetScript.slot_name_order({1: ["a", "b"], 3: ["c"], 2: ["d"]}), ["a", "b", "d", "c"], "names in slot order")
 
 
 func test_gone_peer_idles_all_its_slots() -> void:

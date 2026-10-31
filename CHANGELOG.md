@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.17.1] - 2026-10-31
+
+### Fixed
+- The winner banner shows the winner's lobby name instead of "PLAYER N".
+
 ## [0.17.0] - 2026-10-31
 
 ### Changed

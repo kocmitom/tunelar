@@ -173,8 +173,10 @@ func _check_round_end() -> void:
 		return
 	round_over = true
 	manager.show_map(true)
+	var id: int = winners[0].player_id
+	var winner_name: String = Net.slot_names[id] if Net.in_match else "PLAYER %d" % (id + 1)
 	for hud in huds:
-		hud.show_banner("PLAYER %d WINS" % (winners[0].player_id + 1))
+		hud.show_banner("%s WINS" % winner_name)
 
 
 func _update_huds() -> void:

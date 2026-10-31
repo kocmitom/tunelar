@@ -28,6 +28,8 @@ var match_seed := 0
 var map_size := 1
 # One entry per slot, so a PC with two players appears twice.
 var slot_peers: Array[int] = []
+# Player name per slot, fixed at the match start.
+var slot_names: Array = []
 var local_slots: Array[int] = []
 var sent_tick := 0
 # inputs[tick][slot] = {"move": Vector2, "fire": bool}, null until received.
@@ -190,6 +192,16 @@ static func slot_order(list: Dictionary) -> Array[int]:
 	return order
 
 
+# Player names in slot_order.
+static func slot_name_order(list: Dictionary) -> Array:
+	var names := []
+	var ids := list.keys()
+	ids.sort()
+	for id in ids:
+		names.append_array(list[id])
+	return names
+
+
 func request_start() -> void:
 	_request_start.rpc_id(1)
 
@@ -200,13 +212,14 @@ func _request_start() -> void:
 	if in_match or order.size() < 2:
 		return
 	peer.refuse_new_connections = true
-	_start_match.rpc(randi(), order)
+	_start_match.rpc(randi(), order, slot_name_order(players))
 
 
 @rpc("authority", "call_local", "reliable")
-func _start_match(new_seed: int, order: Array) -> void:
+func _start_match(new_seed: int, order: Array, names: Array) -> void:
 	match_seed = new_seed
 	slot_peers.assign(order)
+	slot_names = names
 	local_slots.clear()
 	for slot in slot_peers.size():
 		if slot_peers[slot] == multiplayer.get_unique_id():
