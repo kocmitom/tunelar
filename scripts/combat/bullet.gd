@@ -12,6 +12,7 @@ var tanks: Array[Tank] = []
 var shooter: Tank
 var velocity: Vector2 = Vector2.ZERO
 var bounces: int = 0
+var max_bounces: int = MAX_BOUNCES
 var is_dead: bool = false
 
 
@@ -28,7 +29,7 @@ func step(delta: float) -> void:
 		var next := global_position + velocity * delta / steps
 		var cell := terrain.get_cell(roundi(next.x), roundi(next.y))
 		if cell == TerrainData.BEDROCK:
-			if bounces >= MAX_BOUNCES:
+			if bounces >= max_bounces:
 				_die()
 				return
 			bounces += 1

@@ -64,6 +64,16 @@ func test_bullet_dies_after_two_bounces() -> void:
 	check_eq(bullet.bounces, Bullet.MAX_BOUNCES, "two bounces used")
 
 
+func test_no_bounce_bullet_dies_on_bedrock() -> void:
+	var terrain := _corridor()
+	_wall(terrain, 150)
+	var bullet := _bullet(terrain, Vector2(100, 100), Vector2(Bullet.BULLET_SPEED, 0))
+	bullet.max_bounces = 0
+	_run(bullet, 0.5)
+	check(bullet.is_dead, "bullet without bounces dies on the first wall")
+	check_eq(bullet.bounces, 0, "no bounce used")
+
+
 func test_diagonal_bounce() -> void:
 	var terrain := _corridor()
 	var bullet := _bullet(terrain, Vector2(100, 100), Vector2(1, 1).normalized() * Bullet.BULLET_SPEED)

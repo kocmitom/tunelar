@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.15.2] - 2026-10-31
+
+### Changed
+- 5-way cannon bullets no longer ricochet: they stop at the first rock.
+
 ## [0.15.1] - 2026-10-31
 
 ### Changed

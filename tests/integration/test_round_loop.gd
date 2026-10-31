@@ -87,6 +87,11 @@ func test_input_drives_fire() -> void:
 	check_eq(gm.bullets_root.get_child_count(), 1, "P1 fire spawns a bullet")
 	check_eq(gm.tanks[0].energy, Tank.MAX_ENERGY - Tank.ENERGY_COST_FIRE, "P1 paid for the shot")
 	check_eq(gm.tanks[1].energy, Tank.MAX_ENERGY, "P2 untouched")
+	gm.tanks[0].special = Tank.Special.SPREAD
+	gm.tanks[0].fire_cooldown = 0.0
+	gm.tanks[0].try_fire()
+	check_eq(gm.bullets_root.get_child_count(), 6, "5-way spawns five bullets")
+	check(gm.bullets_root.get_children().slice(1).all(func(b: Bullet) -> bool: return b.max_bounces == 0), "5-way bullets never bounce")
 	gm.manager.free()
 
 
