@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.16.6] - 2026-10-31
+
+### Changed
+- The laser costs 5 energy per shot instead of 10.
+
 ## [0.16.5] - 2026-10-31
 
 ### Fixed

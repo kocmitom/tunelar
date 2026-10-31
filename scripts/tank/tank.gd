@@ -31,7 +31,7 @@ const SPEED_PER_LEVEL := 0.25
 const RADAR_PER_LEVEL := 0.25
 # Free switches on the pads of other players' bases, in Upgrade pad order; one is active at a time.
 enum Special { SPREAD, LASER, JELLY, RADAR }
-const ENERGY_COST_LASER := 10.0
+const ENERGY_COST_LASER := 5.0
 const ENERGY_COST_SPREAD := ENERGY_COST_FIRE / 2.0
 
 static var _texture: ImageTexture
