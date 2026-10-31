@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.13.2] - 2026-10-31
+
+### Changed
+- A destroyed tank reappears in its base immediately instead of spectating for 2 seconds, so a death no longer reveals the whole map. The map is still shown when the match ends.
+
 ## [0.13.1] - 2026-10-31
 
 ### Changed

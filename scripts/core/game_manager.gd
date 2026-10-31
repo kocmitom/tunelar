@@ -146,9 +146,7 @@ func simulate(inputs: Array[Dictionary]) -> void:
 
 	for tank in tanks:
 		if tank.is_dead:
-			tank.respawn_timer -= TICK_DT
-			if tank.respawn_timer <= 0.0:
-				tank.respawn(Vector2(tank.home_rect.get_center()))
+			tank.respawn(Vector2(tank.home_rect.get_center()))
 			continue
 		var input := inputs[tank.player_id]
 		tank.tick(TICK_DT)

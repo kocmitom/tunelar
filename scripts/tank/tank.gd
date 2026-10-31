@@ -18,7 +18,6 @@ const SPEED_FACTOR_EMPTY := 0.25
 const DIG_MARGIN := 1
 const ENERGY_COST_FIRE := 8.0
 const FIRE_COOLDOWN := 0.25
-const RESPAWN_DELAY := 2.0
 const MAX_SHIELDS := 1.0
 # Refills an empty set in the same time the base refills an empty battery.
 const SHIELD_RECHARGE_BASE := MAX_SHIELDS * ENERGY_RECHARGE_BASE / MAX_ENERGY
@@ -45,7 +44,6 @@ var home_rect: Rect2i
 var is_dead: bool = false
 var fire_cooldown: float = 0.0
 var kills: int = 0
-var respawn_timer: float = 0.0
 # Value of the dirt and gold dug this round.
 var money: int = 0
 var levels: Array[int] = [0, 0, 0, 0]
@@ -173,7 +171,6 @@ func destroy() -> void:
 	if is_dead:
 		return
 	is_dead = true
-	respawn_timer = RESPAWN_DELAY
 	visible = false
 	shape.set_deferred("disabled", true)
 	var explosion := Explosion.new()

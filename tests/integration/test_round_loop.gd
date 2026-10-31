@@ -137,16 +137,15 @@ func test_respawn_after_death() -> void:
 	gm.tanks[1].money = 500
 	gm.tanks[1].levels = [1, 0, 2, 0]
 	_kill(gm, 1, 0)
-	gm.step()
 	check(gm.tanks[1].is_dead, "dead right after the kill")
+	gm.step()
 	check(not gm.round_over, "one kill does not end the round")
-	_run(gm, Tank.RESPAWN_DELAY)
-	check(not gm.tanks[1].is_dead, "alive again after RESPAWN_DELAY")
+	check(not gm.tanks[1].is_dead, "alive again on the next tick")
 	check_eq(Vector2i(gm.tanks[1].global_position), gm.tanks[1].home_rect.get_center(), "respawned at home")
 	check_eq(gm.tanks[1].money, 500, "money kept")
 	check_eq(gm.tanks[1].levels, [1, 0, 2, 0] as Array[int], "upgrades kept")
 	check_eq(gm.tanks[1].shields, gm.tanks[1].max_shields(), "shields refilled")
-	check(gm.manager.fogs[1].visible, "fog back on after respawn")
+	check(gm.manager.fogs[1].visible, "map not shown after a death")
 	gm.manager.free()
 
 
