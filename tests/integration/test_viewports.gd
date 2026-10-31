@@ -93,6 +93,7 @@ func test_round_end_shows_map_to_survivor() -> void:
 	var manager := _make_grid(2)
 	var gm: GameManager = manager.get_node("GameManager")
 	var cam := manager.cameras[1]
+	gm.tanks[1].kills = GameManager.KILLS_TO_WIN
 	gm.tanks[0].destroy()
 	gm.step()
 	check(gm.round_over, "round over")

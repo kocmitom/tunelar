@@ -4,6 +4,15 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-10-31
+
+### Added
+- Your own base is a safe zone: bullets stop on your tank there without doing any damage. Tanks in someone else's base can still be hit.
+
+### Changed
+- A match is a race to 3 kills instead of last tank standing. A destroyed tank spectates for 2 seconds, then reappears in its base with a full battery and shields, keeping its money and upgrades. The first player to 3 kills wins.
+- The HUD shows your kills out of 3 instead of your wins.
+
 ## [0.12.1] - 2026-10-31
 
 ### Changed

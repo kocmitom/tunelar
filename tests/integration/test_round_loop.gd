@@ -92,6 +92,7 @@ func test_input_drives_fire() -> void:
 
 func test_hud_shows_shields() -> void:
 	var gm := _make_game(2)
+	gm.tanks[0].position.y = gm.tanks[0].home_rect.position.y - 5
 	gm.tanks[0].hit()
 	gm.step()
 	var lit := gm.huds[0].shield_segments.filter(func(s: ColorRect) -> bool: return s.modulate.a == 1.0)
@@ -102,12 +103,20 @@ func test_hud_shows_shields() -> void:
 	gm.manager.free()
 
 
+func _kill(gm: GameManager, target: int, attacker: int) -> void:
+	var tank := gm.tanks[target]
+	tank.position.y = tank.home_rect.position.y - 5
+	tank.shields = 0.0
+	tank.hit(gm.tanks[attacker])
+
+
 func test_round_end() -> void:
 	var gm := _make_game(2)
-	gm.tanks[1].destroy()
+	gm.tanks[0].kills = GameManager.KILLS_TO_WIN - 1
+	_kill(gm, 1, 0)
 	gm.step()
-	check(gm.round_over, "round ends with one tank left")
-	check_eq(gm.wins[0], 1, "survivor credited")
+	check(gm.round_over, "round ends at KILLS_TO_WIN kills")
+	check_eq(gm.tanks[0].kills, GameManager.KILLS_TO_WIN, "killer credited")
 	check(gm.huds[0].banner.visible and gm.huds[1].banner.visible, "banner on every HUD")
 	check_eq(gm.huds[0].banner.text, "PLAYER 1 WINS", "banner text")
 
@@ -120,6 +129,24 @@ func test_round_end() -> void:
 	check(gm.manager.round_restart_button.visible, "lobby button shown")
 	check_eq(gm.manager.round_restart_button.text, "Lobby", "button returns to the lobby")
 	_press(gm, KEY_D, false)
+	gm.manager.free()
+
+
+func test_respawn_after_death() -> void:
+	var gm := _make_game(2)
+	gm.tanks[1].money = 500
+	gm.tanks[1].levels = [1, 0, 2, 0]
+	_kill(gm, 1, 0)
+	gm.step()
+	check(gm.tanks[1].is_dead, "dead right after the kill")
+	check(not gm.round_over, "one kill does not end the round")
+	_run(gm, Tank.RESPAWN_DELAY)
+	check(not gm.tanks[1].is_dead, "alive again after RESPAWN_DELAY")
+	check_eq(Vector2i(gm.tanks[1].global_position), gm.tanks[1].home_rect.get_center(), "respawned at home")
+	check_eq(gm.tanks[1].money, 500, "money kept")
+	check_eq(gm.tanks[1].levels, [1, 0, 2, 0] as Array[int], "upgrades kept")
+	check_eq(gm.tanks[1].shields, gm.tanks[1].max_shields(), "shields refilled")
+	check(gm.manager.fogs[1].visible, "fog back on after respawn")
 	gm.manager.free()
 
 

@@ -122,8 +122,7 @@ func test_same_seed_and_inputs_stay_in_sync() -> void:
 	var ok := true
 	for i in 3:
 		ok = ok and a.tanks[i].position == b.tanks[i].position and a.tanks[i].energy == b.tanks[i].energy
-		ok = ok and a.tanks[i].is_dead == b.tanks[i].is_dead
+		ok = ok and a.tanks[i].is_dead == b.tanks[i].is_dead and a.tanks[i].kills == b.tanks[i].kills
 	check(ok, "tanks identical")
-	check_eq(a.wins, b.wins, "wins identical")
 	for gm in games:
 		gm.manager.free()

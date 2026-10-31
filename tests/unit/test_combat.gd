@@ -136,7 +136,29 @@ func test_hit_destroys_tank_and_craters() -> void:
 	check(target.is_dead, "target destroyed")
 	check(not target.visible, "target hidden")
 	check(not shooter.is_dead, "shooter not hit by own bullet")
+	check_eq(shooter.kills, 1, "kill credited to the shooter")
 	check_eq(terrain.get_cell(130, 107), TerrainData.AIR, "crater carved at radius 7")
 	check_eq(terrain.get_cell(130, 109), TerrainData.DIRT, "crater limited to radius 8")
+	shooter.free()
+	target.free()
+
+
+func test_own_base_is_safe() -> void:
+	var terrain := _corridor()
+	var shooter := _spawn(terrain, Vector2(100, 100))
+	var target := _spawn(terrain, Vector2(130, 100))
+	target.shields = 0
+	target.home_rect = Rect2i(120, 90, 21, 21)
+	var tanks: Array[Tank] = [shooter, target]
+	var bullet := _bullet(terrain, shooter.global_position, Vector2(Bullet.BULLET_SPEED, 0), tanks, shooter)
+	_run(bullet, 0.5)
+	check(bullet.is_dead, "bullet stopped by the tank")
+	check(not target.is_dead, "no damage in the own base")
+	check_eq(shooter.kills, 0, "no kill credited")
+	shooter.home_rect = target.home_rect
+	target.home_rect = Rect2i()
+	bullet = _bullet(terrain, shooter.global_position, Vector2(Bullet.BULLET_SPEED, 0), tanks, shooter)
+	_run(bullet, 0.5)
+	check(target.is_dead, "hit in another player's base")
 	shooter.free()
 	target.free()

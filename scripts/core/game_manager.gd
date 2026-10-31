@@ -14,6 +14,8 @@ const PLAYER_COLORS: Array[Color] = [
 	Color(1.0, 0.35, 0.9), Color(0.3, 1.0, 1.0), Color(1.0, 0.5, 0.2),
 ]
 
+const KILLS_TO_WIN := 3
+
 const MAP_AREA_PER_PLAYER := 128000
 const MAP_ASPECT := 1.6
 # Lobby map sizes; M is the default.
@@ -26,7 +28,6 @@ var renderer: TerrainRenderer
 var bullets_root: Node2D
 var tanks: Array[Tank] = []
 var huds: Array[PlayerHud] = []
-var wins: Array[int] = []
 var round_over: bool = false
 var tick: int = 0
 # Seeded per match so every PC in a LAN match generates the same maps.
@@ -68,8 +69,6 @@ func setup(player_count: int, match_seed: int = randi(), local_slots: Array[int]
 	manager.build(local_slots, map_size)
 	tanks.clear()
 	huds.clear()
-	wins.resize(player_count)
-	wins.fill(0)
 	rng.seed = match_seed
 
 	terrain = TerrainData.new(map_size.x, map_size.y)
@@ -112,6 +111,9 @@ func start_round(new_seed: int) -> void:
 		bullet.free()
 	for i in tanks.size():
 		tanks[i].home_rect = terrain.base_rects[i]
+		tanks[i].money = 0
+		tanks[i].levels = [0, 0, 0, 0]
+		tanks[i].kills = 0
 		tanks[i].respawn(Vector2(terrain.base_rects[i].get_center()))
 	for hud in huds:
 		hud.hide_banner()
@@ -144,6 +146,9 @@ func simulate(inputs: Array[Dictionary]) -> void:
 
 	for tank in tanks:
 		if tank.is_dead:
+			tank.respawn_timer -= TICK_DT
+			if tank.respawn_timer <= 0.0:
+				tank.respawn(Vector2(tank.home_rect.get_center()))
 			continue
 		var input := inputs[tank.player_id]
 		tank.tick(TICK_DT)
@@ -157,23 +162,18 @@ func simulate(inputs: Array[Dictionary]) -> void:
 
 
 func _check_round_end() -> void:
-	var alive := tanks.filter(func(t: Tank) -> bool: return not t.is_dead)
-	if alive.size() > 1:
+	var winners := tanks.filter(func(t: Tank) -> bool: return t.kills >= KILLS_TO_WIN)
+	if winners.is_empty():
 		return
 	round_over = true
 	manager.show_map(true)
-	var text := "DRAW"
-	if alive.size() == 1:
-		var winner: Tank = alive[0]
-		wins[winner.player_id] += 1
-		text = "PLAYER %d WINS" % (winner.player_id + 1)
 	for hud in huds:
-		hud.show_banner(text)
+		hud.show_banner("PLAYER %d WINS" % (winners[0].player_id + 1))
 
 
 func _update_huds() -> void:
 	for hud in huds:
-		hud.update_hud(tanks[hud.player_id], wins[hud.player_id])
+		hud.update_hud(tanks[hud.player_id])
 
 
 func _on_tank_fired(tank: Tank) -> void:

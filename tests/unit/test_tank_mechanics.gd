@@ -126,11 +126,11 @@ func test_base_recharges_shields() -> void:
 	var terrain := TerrainData.new()
 	terrain.base_rects = [Rect2i(50, 90, 21, 21)]
 	var tank := _spawn(terrain, Vector2(60, 100))
-	tank.home_rect = terrain.base_rects[0]
 	tank.shields = 0.0
 	tank.energy = 0.0
 	tank.hit()
 	check(tank.is_dead, "a hit with no full shield destroys")
+	tank.home_rect = terrain.base_rects[0]
 	tank.respawn(tank.position)
 	tank.shields = 0.0
 	tank.energy = 0.0
@@ -220,9 +220,11 @@ func test_home_pads_buy_upgrades() -> void:
 		_visit(tank, pad)
 	check_eq(tank.levels[Tank.Upgrade.SHIELD], Tank.MAX_LEVEL, "levels cap at MAX_LEVEL")
 
+	var money := tank.money
 	tank.respawn(Vector2(home.get_center()))
-	check_eq(tank.money, 0, "respawn resets money")
-	check_eq(tank.levels, [0, 0, 0, 0] as Array[int], "respawn resets upgrades")
+	check_eq(tank.money, money, "respawn keeps money")
+	check_eq(tank.levels, [Tank.MAX_LEVEL, 0, 0, 0] as Array[int], "respawn keeps upgrades")
+	check_eq(tank.shields, tank.max_shields(), "respawn fills the upgraded shields")
 	tank.free()
 
 

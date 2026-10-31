@@ -121,4 +121,5 @@ func update_cameras(inputs: Array[Dictionary] = [], delta: float = 0.0) -> void:
 				cam.global_position = pos.clamp(half, Vector2(cam.limit_right, cam.limit_bottom) - half)
 		else:
 			cam.global_position = tank.global_position
+			fogs[i].visible = true
 			fogs[i].reveal(tank.global_position, tank.reveal_radius())

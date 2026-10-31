@@ -18,6 +18,7 @@ const SPEED_FACTOR_EMPTY := 0.25
 const DIG_MARGIN := 1
 const ENERGY_COST_FIRE := 8.0
 const FIRE_COOLDOWN := 0.25
+const RESPAWN_DELAY := 2.0
 const MAX_SHIELDS := 1.0
 # Refills an empty set in the same time the base refills an empty battery.
 const SHIELD_RECHARGE_BASE := MAX_SHIELDS * ENERGY_RECHARGE_BASE / MAX_ENERGY
@@ -43,6 +44,8 @@ var facing: Vector2 = Vector2.UP
 var home_rect: Rect2i
 var is_dead: bool = false
 var fire_cooldown: float = 0.0
+var kills: int = 0
+var respawn_timer: float = 0.0
 # Value of the dirt and gold dug this round.
 var money: int = 0
 var levels: Array[int] = [0, 0, 0, 0]
@@ -154,18 +157,23 @@ func muzzle_position() -> Vector2:
 	return global_position + facing * (tank_radius + 2)
 
 
-# Each full shield absorbs one hit; a hit with no full shield left destroys the tank.
-func hit() -> void:
+# Each full shield absorbs one hit; a hit with no full shield left destroys the tank. The own base is a safe zone.
+func hit(attacker: Tank = null) -> void:
+	if home_rect.has_point(Vector2i(global_position.round())):
+		return
 	if shields >= 1.0:
 		shields -= 1.0
 		return
 	destroy()
+	if attacker:
+		attacker.kills += 1
 
 
 func destroy() -> void:
 	if is_dead:
 		return
 	is_dead = true
+	respawn_timer = RESPAWN_DELAY
 	visible = false
 	shape.set_deferred("disabled", true)
 	var explosion := Explosion.new()
@@ -183,11 +191,9 @@ func respawn(pos: Vector2) -> void:
 	rotation = 0.0
 	facing = Vector2.UP
 	velocity = Vector2.ZERO
-	energy = MAX_ENERGY
-	shields = MAX_SHIELDS
+	energy = max_energy()
+	shields = max_shields()
 	fire_cooldown = 0.0
-	money = 0
-	levels = [0, 0, 0, 0]
 	_pad = -1
 	reset_physics_interpolation()
 

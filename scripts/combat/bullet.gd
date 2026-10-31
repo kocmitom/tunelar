@@ -41,7 +41,7 @@ func step(delta: float) -> void:
 			return
 		for tank in tanks:
 			if tank != shooter and not tank.is_dead and tank.global_position.distance_to(next) <= tank.tank_radius + 0.5:
-				tank.hit()
+				tank.hit(shooter)
 				_die()
 				return
 
