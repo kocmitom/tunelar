@@ -144,11 +144,10 @@ func step_movement(delta: float, input_dir: Vector2) -> void:
 	var digging := TerrainData.is_diggable(probe_cell)
 	var current_speed := SPEED_CLEAR
 	var drain := ENERGY_DRAIN_MOVE_CLEAR
-	# Other players' jelly slows like digging, without the drain.
+	# Other players' jelly slows and drains like digging.
 	if digging or (jelly != null and jelly.slows(self)):
 		# Below LOW_ENERGY digging slows down, crawling at SPEED_FACTOR_EMPTY when the battery is flat.
 		current_speed = SPEED_DIGGING * lerpf(SPEED_FACTOR_EMPTY, 1.0, clampf(energy / LOW_ENERGY, 0.0, 1.0))
-	if digging:
 		drain = ENERGY_DRAIN_DIGGING
 	current_speed *= speed_factor()
 

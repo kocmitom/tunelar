@@ -296,7 +296,7 @@ func test_jelly_slows_others() -> void:
 	follower.position = Vector2(120, 100)
 	_drive(follower, Vector2.RIGHT, 0.5)
 	check_near(follower.position.x, 120.0 + Tank.SPEED_DIGGING * 0.5, 1.0, "other jelly slows to digging speed")
-	check_eq(follower.energy, Tank.MAX_ENERGY, "jelly costs no energy")
+	check_near(follower.energy, Tank.MAX_ENERGY - Tank.ENERGY_DRAIN_DIGGING * 0.5, 0.5, "jelly drains like digging")
 	for i in Jelly.LIFETIME_TICKS:
 		jelly.step()
 	follower.position = Vector2(120, 100)
