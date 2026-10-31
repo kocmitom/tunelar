@@ -97,6 +97,9 @@ func setup(player_count: int, match_seed: int = randi(), local_slots: Array[int]
 		manager.viewports[i].add_child(hud)
 		hud.setup(local_slots[i], PLAYER_COLORS[local_slots[i]])
 		huds.append(hud)
+	Sfx.listeners.clear()
+	for slot in local_slots:
+		Sfx.listeners.append(tanks[slot])
 
 	bullets_root = Node2D.new()
 	bullets_root.name = "Bullets"
@@ -189,6 +192,7 @@ func _update_huds() -> void:
 
 
 func _on_tank_fired(tank: Tank) -> void:
+	Sfx.play(Sfx.Kind.LASER if tank.special == Tank.Special.LASER else Sfx.Kind.FIRE, tank.global_position)
 	if tank.special == Tank.Special.LASER:
 		var laser := Laser.new()
 		laser.terrain = terrain

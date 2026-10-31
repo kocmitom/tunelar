@@ -4,7 +4,12 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
-## [0.21.1] - 2026-10-31
+## [0.22.0] - 2026-10-31
+
+### Added
+- Sound effects for shots, the laser, digging, shells hitting dirt or rock, ricochets off rock, hits absorbed by a shield, a tank blowing up, bumping into rock, and buying an upgrade or switching a special. All sounds are generated in code, with no sound files.
+- A Sound row in the lobby picks this PC's style: Off, 1991 (the original PC speaker beeps, rebuilt from the 1991 game's sound queue: a 5000 Hz click per shot, a 40 Hz buzz per dug frame and the crackling explosion sweeps) or Modern (synthesized cannon thumps, dirt crunches, metal clanks and booms; the default). Each PC chooses its own, and a press plays a sample shot.
+- Sounds fade with distance from your own tanks: full volume within 60 px, silent beyond 320 px, so you can hear other tanks digging and shooting nearby, even through the dirt.
 
 ### Changed
 - Digging costs energy per dug cell instead of per second: every dug cell costs 1/15 energy (`ENERGY_PER_DUG_CELL` in the developer panel), so a faster tank drains its battery faster. That is twice the old cost per cell; a full battery now digs about 1500 cells, enough for one level 1 upgrade.

@@ -5,7 +5,7 @@ config_version=5
 [application]
 
 config/name="Tunneler"
-config/version="0.21.1"
+config/version="0.22.0"
 run/main_scene="res://scenes/ui/lobby.tscn"
 config/features=PackedStringArray("4.7")
 
@@ -14,6 +14,7 @@ config/features=PackedStringArray("4.7")
 Updater="*res://scenes/ui/updater.tscn"
 Net="*res://scripts/core/net.gd"
 DevSettings="*res://scripts/core/dev_settings.gd"
+Sfx="*res://scripts/core/sfx.gd"
 
 [display]
 

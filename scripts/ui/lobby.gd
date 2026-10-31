@@ -8,6 +8,8 @@ extends Control
 @onready var start_button: Button = %StartButton
 # In GameManager.MAP_SIZE_NAMES order, after the "Map" label.
 @onready var map_buttons: Array = %MapSize.get_children().slice(1)
+# In Sfx.Style order, after the "Sound" label; the style is this PC's own.
+@onready var sound_buttons: Array = %SoundStyle.get_children().slice(1)
 @onready var version_label: Label = $VersionLabel
 
 
@@ -19,6 +21,9 @@ func _ready() -> void:
 	Input.joy_connection_changed.connect(func(_device: int, _connected: bool) -> void: _refresh())
 	for i in map_buttons.size():
 		map_buttons[i].pressed.connect(Net.set_map_size.bind(i))
+	for i in sound_buttons.size():
+		sound_buttons[i].set_pressed_no_signal(i == Sfx.style)
+		sound_buttons[i].pressed.connect(_on_sound_button_pressed.bind(i))
 	Net.start()
 	_refresh()
 	start_button.grab_focus()
@@ -64,3 +69,8 @@ func _on_remove_button_pressed() -> void:
 
 func _on_start_button_pressed() -> void:
 	Net.request_start()
+
+
+func _on_sound_button_pressed(style: int) -> void:
+	Sfx.style = style
+	Sfx.play(Sfx.Kind.FIRE)

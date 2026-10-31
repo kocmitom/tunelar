@@ -93,9 +93,11 @@ func tick(delta: float) -> void:
 	if pad != _pad:
 		_pad = pad
 		if pad >= 0 and home:
-			try_upgrade(pad)
-		elif pad >= 0:
+			if try_upgrade(pad):
+				Sfx.play(Sfx.Kind.PICKUP, global_position)
+		elif pad >= 0 and pad != special:
 			special = pad
+			Sfx.play(Sfx.Kind.PICKUP, global_position)
 
 
 func _in_base() -> bool:
@@ -155,12 +157,15 @@ func step_movement(delta: float, input_dir: Vector2) -> void:
 
 	var target := global_position + dir * current_speed * delta
 	if not terrain.is_circle_passable(roundi(target.x), roundi(target.y), tank_radius):
+		Sfx.play(Sfx.Kind.BUMP, global_position)
 		return # Blocked
 
 	energy = maxf(0.0, energy - drain * delta)
 	velocity = dir * current_speed
 	move_and_collide(velocity * delta)
 	money += terrain.dig_circle(roundi(global_position.x), roundi(global_position.y), dig_radius)
+	if terrain.dug_cells > 0:
+		Sfx.play(Sfx.Kind.DIG, global_position)
 	energy = clampf(energy + terrain.dug_energy * TerrainData.ENERGY_VALUE - terrain.dug_drain * TerrainData.DRAIN_VALUE - terrain.dug_cells * ENERGY_PER_DUG_CELL, 0.0, max_energy())
 	if special == Special.JELLY:
 		jelly.lay(global_position, player_id, color)
@@ -204,6 +209,7 @@ func hit(attacker: Tank = null) -> void:
 		return
 	if shields > 0.0:
 		shields = maxf(0.0, shields - 1.0)
+		Sfx.play(Sfx.Kind.HIT, global_position)
 		return
 	destroy(attacker)
 	if attacker and attacker != self:
@@ -216,6 +222,7 @@ func destroy(attacker: Tank = null) -> void:
 	is_dead = true
 	visible = false
 	shape.set_deferred("disabled", true)
+	Sfx.play(Sfx.Kind.DESTROY, global_position)
 	var explosion := Explosion.new()
 	explosion.position = position
 	get_parent().add_child(explosion)

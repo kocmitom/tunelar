@@ -34,14 +34,17 @@ func step(delta: float) -> void:
 		var cell := terrain.get_cell(roundi(next.x), roundi(next.y))
 		if cell == TerrainData.BEDROCK:
 			if bounces >= max_bounces:
+				Sfx.play(Sfx.Kind.IMPACT, global_position)
 				_die()
 				return
 			bounces += 1
 			velocity = velocity.bounce(_wall_normal(next))
+			Sfx.play(Sfx.Kind.RICOCHET, global_position)
 			continue
 		global_position = next
 		if TerrainData.is_diggable(cell):
 			terrain.dig_circle(roundi(next.x), roundi(next.y), DENT_RADIUS)
+			Sfx.play(Sfx.Kind.IMPACT, next)
 			_die()
 			return
 		for tank in tanks:
