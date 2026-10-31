@@ -2,6 +2,7 @@ class_name Worm
 extends Node2D
 ## Dune worm: swims through the ground without digging, refills the tunnels it crosses behind its tail and destroys any tank it touches.
 ## It heads for the CHUNK with the most AIR, weighed against the distance, and keeps away from the bases.
+## HEALTH shots turn its body into gold and bring it back at once, as far from the tanks as it can get.
 
 static var SPEED := 12.0
 static var SEGMENTS := 8
@@ -21,6 +22,8 @@ static var BASE_CLEARANCE := 12
 static var SPAWN_DELAY_TICKS := 20 * GameManager.TICK_RATE
 # Spawn points are at least this far from every base center.
 static var SPAWN_BASE_DISTANCE := 96.0
+# Bullet or laser hits that kill it.
+static var HEALTH := 5
 const COLOR := Color8(222, 190, 120)
 const COLOR_HEAD := Color8(150, 105, 60)
 # Alpha of segments under the ground.
@@ -34,6 +37,9 @@ var heading: Vector2 = Vector2.RIGHT
 var target: Vector2 = Vector2.ZERO
 # Ticks left before the worm wakes up.
 var dormant: int = SPAWN_DELAY_TICKS
+var health: int = HEALTH
+# Seeded from the map so every PC respawns it at the same spot.
+var rng := RandomNumberGenerator.new()
 var _ticks: int = 0
 
 
@@ -47,17 +53,42 @@ func spawn(pos: Vector2) -> void:
 		body.append(pos)
 	position = pos
 	target = pos
+	_ticks = 0
 	reset_physics_interpolation()
 
 
 # A random open spot away from the bases, or the map center when none turns up.
-static func spawn_point(data: TerrainData, rng: RandomNumberGenerator) -> Vector2:
+# With tanks, the candidate farthest from the nearest tank.
+static func spawn_point(data: TerrainData, rng: RandomNumberGenerator, tanks: Array[Tank] = []) -> Vector2:
+	var best := Vector2(data.width, data.height) / 2.0
+	var best_distance := -1.0
 	for attempt in 1000:
 		var p := Vector2(rng.randi_range(0, data.width - 1), rng.randi_range(0, data.height - 1))
 		var far := data.base_rects.all(func(rect: Rect2i) -> bool: return p.distance_to(rect.get_center()) >= SPAWN_BASE_DISTANCE)
-		if far and data.is_circle_passable(roundi(p.x), roundi(p.y), RADIUS):
+		if not far or not data.is_circle_passable(roundi(p.x), roundi(p.y), RADIUS):
+			continue
+		if tanks.is_empty():
 			return p
-	return Vector2(data.width, data.height) / 2.0
+		var distance: float = tanks.reduce(func(d: float, tank: Tank) -> float: return minf(d, p.distance_to(tank.global_position)), INF)
+		if distance > best_distance:
+			best_distance = distance
+			best = p
+	return best
+
+
+func touches(p: Vector2, reach: float) -> bool:
+	return dormant == 0 and body.any(func(s: Vector2) -> bool: return s.distance_to(p) <= RADIUS + reach)
+
+
+func hit() -> void:
+	health -= 1
+	if health > 0:
+		return
+	for p in body:
+		terrain.fill_circle(roundi(p.x), roundi(p.y), RADIUS, TerrainData.GOLD)
+	Sfx.play(Sfx.Kind.DESTROY, body[0])
+	health = HEALTH
+	spawn(spawn_point(terrain, rng, tanks))
 
 
 func step(delta: float) -> void:
@@ -95,7 +126,7 @@ func step(delta: float) -> void:
 	Sfx.play(Sfx.Kind.RUMBLE, body[0])
 
 	for tank in tanks:
-		if not tank.is_dead and body.any(func(p: Vector2) -> bool: return p.distance_to(tank.global_position) <= RADIUS + tank.tank_radius):
+		if not tank.is_dead and touches(tank.global_position, tank.tank_radius):
 			tank.destroy()
 	queue_redraw()
 

@@ -1,6 +1,7 @@
 extends "res://tests/test_case.gd"
 
 const TankScene := preload("res://scenes/tank/tank.tscn")
+const BulletScene := preload("res://scenes/combat/bullet.tscn")
 const DT := GameManager.TICK_DT
 
 
@@ -24,6 +25,27 @@ func _corridor() -> TerrainData:
 func _run(worm: Worm, seconds: float) -> void:
 	for i in roundi(seconds / DT):
 		worm.step(DT)
+
+
+func _tank(terrain: TerrainData, pos: Vector2) -> Tank:
+	var tank: Tank = TankScene.instantiate()
+	tank.terrain = terrain
+	tank.position = pos
+	tree.root.add_child(tank)
+	return tank
+
+
+# A bullet down the corridor from x = 120 toward the worm.
+func _shoot(terrain: TerrainData, worm: Worm, seconds: float = 0.5) -> Bullet:
+	var bullet: Bullet = BulletScene.instantiate()
+	bullet.terrain = terrain
+	bullet.worms = [worm] as Array[Worm]
+	bullet.position = Vector2(120, 100)
+	bullet.velocity = Vector2(Bullet.BULLET_SPEED, 0)
+	tree.root.add_child(bullet)
+	for i in roundi(seconds / DT):
+		bullet.step(DT)
+	return bullet
 
 
 func _chunk_sum(terrain: TerrainData) -> int:
@@ -120,3 +142,59 @@ func test_avoids_bedrock_and_bases() -> void:
 	check(ok, "head never enters bedrock or a base no-go zone")
 	check(worm.body[0].distance_to(Vector2(60, 100)) > 20.0, "worm found a way (head at %s)" % worm.body[0])
 	worm.free()
+
+
+func test_shots_turn_worm_gold() -> void:
+	var terrain := _corridor()
+	var tank := _tank(terrain, Vector2(50, 100))
+	var worm := _worm(terrain, Vector2(150, 100), [tank] as Array[Tank])
+	for i in Worm.HEALTH - 1:
+		check(_shoot(terrain, worm).is_dead, "bullet %d stopped by the worm" % (i + 1))
+	check_eq(worm.health, 1, "one hit left")
+	check_eq(terrain.get_cell(150, 100), TerrainData.AIR, "no gold before the kill")
+	_shoot(terrain, worm)
+	check_eq(terrain.get_cell(150, 100), TerrainData.GOLD, "body turned to gold")
+	check_eq(terrain.get_cell(150, 100 + Worm.RADIUS), TerrainData.GOLD, "gold fills the segment radius")
+	check_eq(terrain.get_cell(150, 100 + Worm.RADIUS + 3), TerrainData.DIRT, "dirt beyond the segment stays dirt")
+	check_eq(worm.health, Worm.HEALTH, "respawned at full health")
+	check(worm.body[0].distance_to(tank.position) > 200.0, "respawned far from the tank (head at %s)" % worm.body[0])
+	check(worm.body.all(func(p: Vector2) -> bool: return p == worm.body[0]), "whole body moved")
+	worm.free()
+	tank.free()
+
+
+func test_dormant_worm_not_hit() -> void:
+	var terrain := _corridor()
+	var worm := _worm(terrain, Vector2(150, 100))
+	worm.dormant = 10
+	var bullet := _shoot(terrain, worm, 0.25)
+	check(not bullet.is_dead, "bullet flies through a dormant worm")
+	check_eq(worm.health, Worm.HEALTH, "no damage")
+	bullet.free()
+	worm.free()
+
+
+func test_laser_hits_worm() -> void:
+	var terrain := _corridor()
+	var worm := _worm(terrain, Vector2(150, 100))
+	var laser := Laser.new()
+	laser.terrain = terrain
+	laser.worms = [worm] as Array[Worm]
+	laser.position = Vector2(120, 100)
+	tree.root.add_child(laser)
+	laser.fire(Vector2.RIGHT)
+	check_eq(worm.health, Worm.HEALTH - 1, "laser takes one hit off")
+	check(laser.end.x < 30.0, "beam stops at the worm (end %s)" % laser.end)
+	laser.free()
+	worm.free()
+
+
+func test_spawn_point_far_from_tanks() -> void:
+	var terrain := TerrainData.new()
+	var tank := _tank(terrain, Vector2(20, 20))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 1
+	var p := Worm.spawn_point(terrain, rng, [tank] as Array[Tank])
+	check(p.distance_to(tank.position) > 280.0, "spawns on the far side (got %s)" % p)
+	check(terrain.is_circle_passable(roundi(p.x), roundi(p.y), Worm.RADIUS), "spawn point is open")
+	tank.free()

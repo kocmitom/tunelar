@@ -1,6 +1,6 @@
 class_name Bullet
 extends Node2D
-## Grid-stepped projectile: dents dirt, ricochets off bedrock, hits tanks.
+## Grid-stepped projectile: dents dirt, ricochets off bedrock, hits tanks and worms.
 
 static var BULLET_SPEED := 180.0
 static var MAX_BOUNCES := 2
@@ -9,6 +9,8 @@ const COLOR := Color(1.0, 0.95, 0.5)
 
 var terrain: TerrainData
 var tanks: Array[Tank] = []
+# Empty for shrapnel, so a tank the worm eats does not shred it.
+var worms: Array[Worm] = []
 var shooter: Tank
 # Credited with the hit instead of the shooter when set, as for shrapnel.
 var attacker: Tank
@@ -42,6 +44,12 @@ func step(delta: float) -> void:
 			Sfx.play(Sfx.Kind.RICOCHET, global_position)
 			continue
 		global_position = next
+		for worm in worms:
+			if worm.touches(next, 0.5):
+				worm.hit()
+				Sfx.play(Sfx.Kind.IMPACT, next)
+				_die()
+				return
 		if TerrainData.is_diggable(cell):
 			terrain.dig_circle(roundi(next.x), roundi(next.y), DENT_RADIUS)
 			Sfx.play(Sfx.Kind.IMPACT, next)

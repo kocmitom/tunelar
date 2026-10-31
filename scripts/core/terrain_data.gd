@@ -140,8 +140,8 @@ func dig_circle(cx: int, cy: int, radius: int) -> int:
 	return dug
 
 
-# Turns the AIR in the circle back into DIRT.
-func fill_circle(cx: int, cy: int, radius: int) -> void:
+# Turns the AIR and DIRT in the circle into cell.
+func fill_circle(cx: int, cy: int, radius: int, cell: int = DIRT) -> void:
 	var x0 := maxi(cx - radius, 0)
 	var y0 := maxi(cy - radius, 0)
 	var x1 := mini(cx + radius, width - 1)
@@ -151,8 +151,8 @@ func fill_circle(cx: int, cy: int, radius: int) -> void:
 	for y in range(y0, y1 + 1):
 		for x in range(x0, x1 + 1):
 			var i := y * width + x
-			if (x - cx) * (x - cx) + (y - cy) * (y - cy) <= r2 and cells[i] == AIR:
-				cells[i] = DIRT
+			if (x - cx) * (x - cx) + (y - cy) * (y - cy) <= r2 and (cells[i] == AIR or cells[i] == DIRT) and cells[i] != cell:
+				cells[i] = cell
 				filled = true
 	if filled:
 		cells_changed.emit(Rect2i(x0, y0, x1 - x0 + 1, y1 - y0 + 1))

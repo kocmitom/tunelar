@@ -4,6 +4,12 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-10-31
+
+### Added
+- Dune worms can be killed: 5 bullet or laser hits on any segment (`HEALTH` in the developer panel) turn its whole body into gold where it died, ready to be dug. A shot that reaches a buried segment where it first touches the dirt counts too; a dormant worm cannot be hit, and shrapnel from exploding tanks never hurts it. No kill is credited.
+- A killed worm comes back at once, at a random open spot as far as possible from every tank.
+
 ## [0.24.2] - 2026-10-31
 
 ### Changed

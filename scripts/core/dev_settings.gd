@@ -16,7 +16,7 @@ var groups := [
 	["Laser", Laser, ["LIFETIME"], ""],
 	["Worm", Worm, [
 		"SPEED", "SEGMENTS", "SEGMENT_SPACING", "RADIUS", "FILL_RADIUS", "TURN_RATE", "WIGGLE", "WIGGLE_TICKS",
-		"RETARGET_TICKS", "DISTANCE_PENALTY", "BASE_CLEARANCE", "SPAWN_DELAY_TICKS", "SPAWN_BASE_DISTANCE",
+		"RETARGET_TICKS", "DISTANCE_PENALTY", "BASE_CLEARANCE", "SPAWN_DELAY_TICKS", "SPAWN_BASE_DISTANCE", "HEALTH",
 	], "segments, spawn: next round"],
 	["GameManager", GameManager, ["KILLS_TO_WIN", "SHRAPNEL_COUNT", "MAP_AREA_PER_PLAYER", "MAP_ASPECT"], "map size: next match"],
 	["TerrainData", TerrainData, [

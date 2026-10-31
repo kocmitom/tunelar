@@ -133,13 +133,12 @@ func start_round(new_seed: int) -> void:
 		worm.free()
 	worms.clear()
 	# One worm per round, placed from the map seed so every PC agrees.
-	var worm_rng := RandomNumberGenerator.new()
-	worm_rng.seed = terrain.map_seed
 	var worm := Worm.new()
 	worm.terrain = terrain
 	worm.tanks = tanks
+	worm.rng.seed = terrain.map_seed
 	manager.world_root.add_child(worm)
-	worm.spawn(Worm.spawn_point(terrain, worm_rng))
+	worm.spawn(Worm.spawn_point(terrain, worm.rng))
 	worms.append(worm)
 	for i in tanks.size():
 		tanks[i].home_rect = terrain.base_rects[i]
@@ -228,6 +227,7 @@ func _on_tank_fired(tank: Tank) -> void:
 		var laser := Laser.new()
 		laser.terrain = terrain
 		laser.tanks = tanks
+		laser.worms = worms
 		laser.shooter = tank
 		laser.position = tank.muzzle_position()
 		bullets_root.add_child(laser)
@@ -239,6 +239,7 @@ func _on_tank_fired(tank: Tank) -> void:
 		var bullet: Bullet = BulletScene.instantiate()
 		bullet.terrain = terrain
 		bullet.tanks = tanks
+		bullet.worms = worms
 		bullet.shooter = tank
 		bullet.volley = volley
 		bullet.position = tank.muzzle_position(dir)
