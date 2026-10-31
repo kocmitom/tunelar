@@ -2,9 +2,9 @@ class_name Bullet
 extends Node2D
 ## Grid-stepped projectile: dents dirt, ricochets off bedrock, hits tanks.
 
-const BULLET_SPEED := 180.0
-const MAX_BOUNCES := 2
-const DENT_RADIUS := 3
+static var BULLET_SPEED := 180.0
+static var MAX_BOUNCES := 2
+static var DENT_RADIUS := 3
 const COLOR := Color(1.0, 0.95, 0.5)
 
 var terrain: TerrainData

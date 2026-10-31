@@ -2,8 +2,8 @@ class_name Explosion
 extends Node2D
 ## Carves a crater on detonation, then plays a short expanding ring.
 
-const RADIUS := 8
-const DURATION := 0.4
+static var RADIUS := 8
+static var DURATION := 0.4
 
 var _time: float = 0.0
 

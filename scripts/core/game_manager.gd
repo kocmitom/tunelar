@@ -14,12 +14,12 @@ const PLAYER_COLORS: Array[Color] = [
 	Color(1.0, 0.35, 0.9), Color(0.3, 1.0, 1.0), Color(1.0, 0.5, 0.2),
 ]
 
-const KILLS_TO_WIN := 3
+static var KILLS_TO_WIN := 3
 # Bullets a destroyed tank bursts into, evenly around it.
-const SHRAPNEL_COUNT := 12
+static var SHRAPNEL_COUNT := 12
 
-const MAP_AREA_PER_PLAYER := 128000
-const MAP_ASPECT := 1.6
+static var MAP_AREA_PER_PLAYER := 128000
+static var MAP_ASPECT := 1.6
 # Lobby map sizes; M is the default.
 const MAP_SIZE_NAMES := ["S", "M", "L", "XL"]
 const MAP_AREA_SCALES: Array[float] = [0.5, 1.0, 2.0, 3.0]
@@ -148,6 +148,7 @@ func step() -> void:
 # One fixed TICK_DT step. inputs[player_id] = {"move": Vector2, "fire": bool, "turn": float}.
 func simulate(inputs: Array[Dictionary]) -> void:
 	tick += 1
+	Net.apply_tunings(tick)
 	if round_over:
 		manager.update_cameras(inputs, TICK_DT)
 		_update_huds()

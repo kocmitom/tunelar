@@ -2,7 +2,7 @@ class_name Laser
 extends Node2D
 ## Instant beam: runs through open cells until dirt, bedrock or a tank, then shows a short red line.
 
-const LIFETIME := 0.15
+static var LIFETIME := 0.15
 const COLOR := Color(1.0, 0.15, 0.1)
 
 var terrain: TerrainData

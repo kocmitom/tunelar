@@ -2,8 +2,8 @@ class_name Jelly
 extends Sprite2D
 ## Trail in its owner's color left by tanks with the jelly special; other tanks drive through it at digging speed and drain. Uploads at most once per frame.
 
-const LIFETIME_TICKS := 5 * GameManager.TICK_RATE
-const RADIUS := 1
+static var LIFETIME_TICKS := 5 * GameManager.TICK_RATE
+static var RADIUS := 1
 const ALPHA := 0.5
 
 var image: Image

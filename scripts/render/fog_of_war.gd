@@ -4,14 +4,14 @@ extends Sprite2D
 ## Explored cells within the tank's sight circle are clear, so tanks and bullets elsewhere stay hidden. Uploads at most once per frame.
 
 # The explored circle is this many tank sizes across.
-const REVEAL_TANK_SIZES := 4
+static var REVEAL_TANK_SIZES := 4
 # The sight circle is this many times wider than the explored circle.
-const SIGHT_SCALE := 3
+static var SIGHT_SCALE := 3
 # The first reveal of a round is this much wider than the driving reveal.
-const SPAWN_REVEAL_SCALE := 2
+static var SPAWN_REVEAL_SCALE := 2
 const COLOR_FOG := Color8(34, 40, 64)
 # How far explored terrain is blended toward COLOR_FOG.
-const EXPLORED_DIM := 0.5
+static var EXPLORED_DIM := 0.5
 # Depth of the fog frame drawn around the world, so the area past the map edge looks unexplored.
 const OUTSIDE := 4096.0
 

@@ -5,39 +5,40 @@ extends CharacterBody2D
 signal fired(tank: Tank)
 signal destroyed(tank: Tank, attacker: Tank)
 
-const MAX_ENERGY := 100.0
-const SPEED_CLEAR := 60.0
-const SPEED_DIGGING := 15.625
-const ENERGY_DRAIN_IDLE := 0.0
-const ENERGY_DRAIN_MOVE_CLEAR := 0.0
-const ENERGY_DRAIN_DIGGING := 4.6875
-const ENERGY_RECHARGE_BASE := 25.0
-const ENERGY_REGEN_PASSIVE := 0.5
-const LOW_ENERGY := 10.0
-const SPEED_FACTOR_EMPTY := 0.25
-const DIG_MARGIN := 1
-const ENERGY_COST_FIRE := 2.0
-const FIRE_COOLDOWN := 0.25 / 3.0
+# Tuning values are static vars so DevSettings can change them live.
+static var MAX_ENERGY := 100.0
+static var SPEED_CLEAR := 60.0
+static var SPEED_DIGGING := 15.625
+static var ENERGY_DRAIN_IDLE := 0.0
+static var ENERGY_DRAIN_MOVE_CLEAR := 0.0
+static var ENERGY_DRAIN_DIGGING := 4.6875
+static var ENERGY_RECHARGE_BASE := 25.0
+static var ENERGY_REGEN_PASSIVE := 0.5
+static var LOW_ENERGY := 10.0
+static var SPEED_FACTOR_EMPTY := 0.25
+static var DIG_MARGIN := 1
+static var ENERGY_COST_FIRE := 2.0
+static var FIRE_COOLDOWN := 0.25 / 3.0
 # Hits the shield bar absorbs; each shield level adds SHIELDS_PER_LEVEL.
-const MAX_SHIELDS := 5.0
-const SHIELDS_PER_LEVEL := 2.0
+static var MAX_SHIELDS := 5.0
+static var SHIELDS_PER_LEVEL := 2.0
 # Shields per second in a base.
-const SHIELD_RECHARGE_BASE := 1.0
+static var SHIELD_RECHARGE_BASE := 1.0
 
 enum Upgrade { SHIELD, ENERGY, SPEED, RADAR }
-const MAX_LEVEL := 5
+static var MAX_LEVEL := 5
 # About half the dirt cells one full base battery digs; level N costs N times this.
-const UPGRADE_COST := 1500
-const ENERGY_PER_LEVEL := 0.5
-const SPEED_PER_LEVEL := 0.25
-const RADAR_PER_LEVEL := 0.25
+static var UPGRADE_COST := 1500
+static var ENERGY_PER_LEVEL := 0.5
+static var SPEED_PER_LEVEL := 0.25
+static var RADAR_PER_LEVEL := 0.25
 # Free switches on the pads of other players' bases, in Upgrade pad order; one is active at a time.
 enum Special { SPREAD, LASER, JELLY, RADAR }
-const ENERGY_COST_LASER := 1.25
-const ENERGY_COST_SPREAD := ENERGY_COST_FIRE / 2.0
+static var ENERGY_COST_LASER := 1.25
+static var ENERGY_COST_SPREAD := 1.0
 # Radians per second the barrel turns in turret mode, up to TURRET_LIMIT either side of the front.
-const TURRET_SPEED := PI
-const TURRET_LIMIT := PI / 2.0
+static var TURRET_SPEED := PI
+static var TURRET_LIMIT := PI / 2.0
 
 static var _texture: ImageTexture
 static var _barrel_texture: ImageTexture

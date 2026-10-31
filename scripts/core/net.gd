@@ -36,6 +36,8 @@ var local_slots: Array[int] = []
 var sent_tick := 0
 # inputs[tick][slot] = {"move": Vector2, "fire": bool, "turn": float}, null until received.
 var inputs := {}
+# tunings[tick] = [[key, value], ...], applied right before that tick is simulated.
+var tunings := {}
 var gone_slots := {}
 var udp := PacketPeerUDP.new()
 var peer: ENetMultiplayerPeer
@@ -225,11 +227,13 @@ func _request_start() -> void:
 	if in_match or order.size() < 2:
 		return
 	peer.refuse_new_connections = true
-	_start_match.rpc(randi(), order, slot_name_order(players))
+	_start_match.rpc(randi(), order, slot_name_order(players), DevSettings.values())
 
 
+# Every PC, including one that joined later, starts with the host's tuning values.
 @rpc("authority", "call_local", "reliable")
-func _start_match(new_seed: int, order: Array, names: Array) -> void:
+func _start_match(new_seed: int, order: Array, names: Array, tuning: Dictionary) -> void:
+	DevSettings.load_values(tuning)
 	match_seed = new_seed
 	slot_peers.assign(order)
 	slot_names = names
@@ -268,6 +272,7 @@ func _back_to_lobby() -> void:
 # The first INPUT_DELAY ticks are idle, so every PC can run them before any input arrives.
 func reset_inputs() -> void:
 	inputs.clear()
+	tunings.clear()
 	gone_slots.clear()
 	sent_tick = INPUT_DELAY
 	for tick in range(1, INPUT_DELAY + 1):
@@ -285,6 +290,29 @@ func send_input(tick: int, local_inputs: Array[Dictionary]) -> void:
 @rpc("any_peer", "call_local", "reliable")
 func _receive_input(tick: int, slot: int, move: Vector2, fire: bool, turn: float = 0.0) -> void:
 	_store(tick, slot, {"move": move, "fire": fire, "turn": turn})
+
+
+# In a match the change lands on the tick after this PC's last sent input. Reliable RPCs from one peer arrive in order, so every PC has it before it can simulate that tick.
+func send_tuning(key: String, value: Variant) -> void:
+	var tick := sent_tick + 1 if in_match else 0
+	if peer:
+		_receive_tuning.rpc(tick, key, value)
+	else:
+		_receive_tuning(tick, key, value)
+
+
+@rpc("any_peer", "call_local", "reliable")
+func _receive_tuning(tick: int, key: String, value: Variant) -> void:
+	if tick == 0:
+		DevSettings.apply(key, value)
+	else:
+		tunings.get_or_add(tick, []).append([key, value])
+
+
+func apply_tunings(tick: int) -> void:
+	for entry in tunings.get(tick, []):
+		DevSettings.apply(entry[0], entry[1])
+	tunings.erase(tick)
 
 
 func _store(tick: int, slot: int, input: Dictionary) -> void:

@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-10-31
+
+### Added
+- Developer settings: F1 opens a panel, in the lobby or during a match, listing the gameplay values of tanks, bullets, explosions, jelly, laser, rounds, map generation, fog and sonar. Changed values are highlighted and Reset all restores the code defaults. In a LAN match a change is sent to every PC and applied on the same tick, so the game stays in sync; a new match starts with the host's values. Map generation values take effect at the next round and the map size values at the next match. Values are not saved and reset on restart.
+
 ## [0.19.3] - 2026-10-31
 
 ### Changed

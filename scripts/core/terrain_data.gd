@@ -16,44 +16,44 @@ const BORDER := 2
 const BASE_SIZE := 33
 const BASE_DOOR := 11
 const PAD_SIZE := 9
-const ROCK_COVERAGE := 0.05
-const ROCK_RADIUS_MIN := 5.0
-const ROCK_RADIUS_MAX := 11.0
-const ROCK_STRETCH_MAX := 2.2
-const ROCK_WOBBLE := 0.25
-const GOLD_COVERAGE := 0.01
-const GOLD_RADIUS_MIN := 2.0
-const GOLD_RADIUS_MAX := 4.0
+static var ROCK_COVERAGE := 0.05
+static var ROCK_RADIUS_MIN := 5.0
+static var ROCK_RADIUS_MAX := 11.0
+static var ROCK_STRETCH_MAX := 2.2
+static var ROCK_WOBBLE := 0.25
+static var GOLD_COVERAGE := 0.01
+static var GOLD_RADIUS_MIN := 2.0
+static var GOLD_RADIUS_MAX := 4.0
 # Money per dug gold cell; a dirt cell is worth 1.
-const GOLD_VALUE := 10
-const ENERGY_COVERAGE := 0.005
-const ENERGY_RADIUS_MIN := 2.0
-const ENERGY_RADIUS_MAX := 4.0
+static var GOLD_VALUE := 10
+static var ENERGY_COVERAGE := 0.005
+static var ENERGY_RADIUS_MIN := 2.0
+static var ENERGY_RADIUS_MAX := 4.0
 # Battery recharged per dug energy cell, so bigger blobs give more.
-const ENERGY_VALUE := 1.0
+static var ENERGY_VALUE := 1.0
 # Red blobs the size of energy blobs; each dug cell drains DRAIN_VALUE from the battery.
-const DRAIN_COVERAGE := 0.005
-const DRAIN_VALUE := 1.0
+static var DRAIN_COVERAGE := 0.005
+static var DRAIN_VALUE := 1.0
 # Bases sit evenly on a circle of RING_RADIUS half-sides, each shifted by up to RING_JITTER of the gap to its neighbors.
-const RING_RADIUS := 0.6
-const RING_JITTER := 0.15
+static var RING_RADIUS := 0.6
+static var RING_JITTER := 0.15
 # Solid rock beyond a wobbly outline between the circle of EDGE_IN and EDGE_OUT half-sides, so the map reads as an irregular cave and its edge is never reached.
-const EDGE_IN := 0.76
-const EDGE_OUT := 0.9
+static var EDGE_IN := 0.76
+static var EDGE_OUT := 0.9
 # Between the bases, away from their sides, bays reach in down to EDGE_DEEP half-sides.
-const EDGE_DEEP := 0.55
+static var EDGE_DEEP := 0.55
 # Clearance kept beside a base, in pixels, before the bays may deepen.
-const EDGE_BASE_CLEAR := 36.0
+static var EDGE_BASE_CLEAR := 36.0
 # The outline is computed once per direction bin.
-const EDGE_BINS := 720
+static var EDGE_BINS := 720
 # How far the outer limit bulges from the EDGE_OUT circle toward the EDGE_OUT square, into the corners.
-const EDGE_SQUARE := 0.5
+static var EDGE_SQUARE := 0.5
 # Noise frequency around the unit circle, so every map size gets the same number of lobes.
-const EDGE_FREQUENCY := 1.2
-const EDGE_CONTRAST := 0.7
+static var EDGE_FREQUENCY := 1.2
+static var EDGE_CONTRAST := 0.7
 # Pixel-scale roughness on top of the lobes, in half-sides, for rock fingers, bays and islands.
-const EDGE_ROUGH := 0.05
-const EDGE_ROUGH_FREQUENCY := 0.04
+static var EDGE_ROUGH := 0.05
+static var EDGE_ROUGH_FREQUENCY := 0.04
 
 var width: int
 var height: int
