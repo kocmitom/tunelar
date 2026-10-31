@@ -4,6 +4,12 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.21.1] - 2026-10-31
+
+### Changed
+- Digging costs energy per dug cell instead of per second: every dug cell costs 1/15 energy (`ENERGY_PER_DUG_CELL` in the developer panel), so a faster tank drains its battery faster. That is twice the old cost per cell; a full battery now digs about 1500 cells, enough for one level 1 upgrade.
+- Other players' jelly drains 9.375 energy per second (`ENERGY_DRAIN_JELLY`), the same as digging at base speed.
+
 ## [0.21.0] - 2026-10-31
 
 ### Removed

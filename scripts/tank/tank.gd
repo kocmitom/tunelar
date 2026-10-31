@@ -11,7 +11,9 @@ static var SPEED_CLEAR := 60.0
 static var SPEED_DIGGING := 15.625
 static var ENERGY_DRAIN_IDLE := 0.0
 static var ENERGY_DRAIN_MOVE_CLEAR := 0.0
-static var ENERGY_DRAIN_DIGGING := 4.6875
+# Energy per dug cell, so faster digging drains faster.
+static var ENERGY_PER_DUG_CELL := 1.0 / 15.0
+static var ENERGY_DRAIN_JELLY := 9.375
 static var ENERGY_RECHARGE_BASE := 25.0
 static var ENERGY_REGEN_PASSIVE := 0.5
 static var LOW_ENERGY := 10.0
@@ -142,11 +144,13 @@ func step_movement(delta: float, input_dir: Vector2) -> void:
 	var digging := TerrainData.is_diggable(probe_cell)
 	var current_speed := SPEED_CLEAR
 	var drain := ENERGY_DRAIN_MOVE_CLEAR
-	# Other players' jelly slows and drains like digging.
-	if digging or (jelly != null and jelly.slows(self)):
+	# Other players' jelly slows like digging and drains ENERGY_DRAIN_JELLY per second.
+	var slowed := jelly != null and jelly.slows(self)
+	if digging or slowed:
 		# Below LOW_ENERGY digging slows down, crawling at SPEED_FACTOR_EMPTY when the battery is flat.
 		current_speed = SPEED_DIGGING * lerpf(SPEED_FACTOR_EMPTY, 1.0, clampf(energy / LOW_ENERGY, 0.0, 1.0))
-		drain = ENERGY_DRAIN_DIGGING
+	if slowed:
+		drain = ENERGY_DRAIN_JELLY
 	current_speed *= speed_factor()
 
 	var target := global_position + dir * current_speed * delta
@@ -157,7 +161,7 @@ func step_movement(delta: float, input_dir: Vector2) -> void:
 	velocity = dir * current_speed
 	move_and_collide(velocity * delta)
 	money += terrain.dig_circle(roundi(global_position.x), roundi(global_position.y), dig_radius)
-	energy = clampf(energy + terrain.dug_energy * TerrainData.ENERGY_VALUE - terrain.dug_drain * TerrainData.DRAIN_VALUE, 0.0, max_energy())
+	energy = clampf(energy + terrain.dug_energy * TerrainData.ENERGY_VALUE - terrain.dug_drain * TerrainData.DRAIN_VALUE - terrain.dug_cells * ENERGY_PER_DUG_CELL, 0.0, max_energy())
 	if special == Special.JELLY:
 		jelly.lay(global_position, player_id, color)
 

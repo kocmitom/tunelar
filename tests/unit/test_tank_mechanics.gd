@@ -32,7 +32,7 @@ func test_digging_drain() -> void:
 	var terrain := TerrainData.new()
 	var tank := _spawn(terrain, Vector2(60, 100))
 	_drive(tank, Vector2.RIGHT, 1.0)
-	check_near(Tank.MAX_ENERGY - tank.energy, Tank.ENERGY_DRAIN_DIGGING, 0.1, "digging drain per second")
+	check_near(Tank.MAX_ENERGY - tank.energy, tank.money * Tank.ENERGY_PER_DUG_CELL, 0.001, "each dug cell costs ENERGY_PER_DUG_CELL")
 	check_near(tank.position.x, 60.0 + Tank.SPEED_DIGGING, 1.0, "digging speed")
 	check_eq(terrain.get_cell(70, 100), TerrainData.AIR, "tunnel left behind")
 	var half_width := tank.tank_radius + Tank.DIG_MARGIN
@@ -45,8 +45,22 @@ func test_diagonal_digging_drain() -> void:
 	var terrain := TerrainData.new()
 	var tank := _spawn(terrain, Vector2(60, 60))
 	_drive(tank, Vector2(1, 1), 1.0)
-	check_near(Tank.MAX_ENERGY - tank.energy, Tank.ENERGY_DRAIN_DIGGING, 0.1, "diagonal digging drain")
+	check_near(Tank.MAX_ENERGY - tank.energy, tank.money * Tank.ENERGY_PER_DUG_CELL, 0.001, "diagonal digging costs the same per cell")
 	tank.free()
+
+
+func test_faster_digging_drains_faster() -> void:
+	var terrain := TerrainData.new()
+	var slow := _spawn(terrain, Vector2(60, 60))
+	var fast := _spawn(terrain, Vector2(60, 140))
+	fast.levels[Tank.Upgrade.SPEED] = 2
+	_drive(slow, Vector2.RIGHT, 1.0)
+	_drive(fast, Vector2.RIGHT, 1.0)
+	check(fast.position.x > slow.position.x, "speed levels dig farther")
+	check(fast.energy < slow.energy, "and drain more energy per second")
+	check_near(Tank.MAX_ENERGY - fast.energy, fast.money * Tank.ENERGY_PER_DUG_CELL, 0.001, "at the same cost per cell")
+	slow.free()
+	fast.free()
 
 
 func test_idle_and_empty_battery() -> void:
@@ -157,9 +171,12 @@ func test_digging_earns_money() -> void:
 	check_eq(tank.money, dug, "driving through a dug tunnel earns nothing")
 	tank.energy = Tank.MAX_ENERGY
 	tank.money = 0
-	_drive(tank, Vector2.RIGHT, 22.4)
+	for i in 60 * GameManager.TICK_RATE:
+		if tank.energy == 0.0:
+			break
+		tank.step_movement(DT, Vector2.RIGHT)
 	check_eq(tank.energy, 0.0, "battery drained")
-	check_near(tank.money, 2 * Tank.UPGRADE_COST, Tank.UPGRADE_COST * 0.2, "one full battery of digging pays for two level 1 upgrades")
+	check_near(tank.money, Tank.UPGRADE_COST, Tank.UPGRADE_COST * 0.1, "one full battery of digging pays for a level 1 upgrade")
 	tank.free()
 
 
@@ -185,7 +202,7 @@ func test_digging_drain_cells() -> void:
 			terrain.cells[y * terrain.width + x] = TerrainData.DRAIN
 	var tank := _spawn(terrain, Vector2(60, 100))
 	_drive(tank, Vector2.RIGHT, 1.0)
-	check(Tank.MAX_ENERGY - tank.energy > Tank.ENERGY_DRAIN_DIGGING + 10.0 * TerrainData.DRAIN_VALUE, "dug red cells drain the battery")
+	check(Tank.MAX_ENERGY - tank.energy > tank.money * Tank.ENERGY_PER_DUG_CELL + 10.0 * TerrainData.DRAIN_VALUE, "dug red cells drain the battery")
 	tank.energy = 1.0
 	_drive(tank, Vector2.RIGHT, 0.5)
 	check(tank.energy >= 0.0, "energy never goes negative")
@@ -296,7 +313,7 @@ func test_jelly_slows_others() -> void:
 	follower.position = Vector2(120, 100)
 	_drive(follower, Vector2.RIGHT, 0.5)
 	check_near(follower.position.x, 120.0 + Tank.SPEED_DIGGING * 0.5, 1.0, "other jelly slows to digging speed")
-	check_near(follower.energy, Tank.MAX_ENERGY - Tank.ENERGY_DRAIN_DIGGING * 0.5, 0.5, "jelly drains like digging")
+	check_near(follower.energy, Tank.MAX_ENERGY - Tank.ENERGY_DRAIN_JELLY * 0.5, 0.5, "jelly drains ENERGY_DRAIN_JELLY")
 	for i in Jelly.LIFETIME_TICKS:
 		jelly.step()
 	follower.position = Vector2(120, 100)

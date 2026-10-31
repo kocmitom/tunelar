@@ -63,6 +63,7 @@ var base_rects: Array[Rect2i] = []
 # Energy and drain cells removed by the last dig_circle call.
 var dug_energy: int = 0
 var dug_drain: int = 0
+var dug_cells: int = 0
 
 
 func _init(w: int = 320, h: int = 200) -> void:
@@ -112,6 +113,7 @@ func dig_circle(cx: int, cy: int, radius: int) -> int:
 	var dug := 0
 	dug_energy = 0
 	dug_drain = 0
+	dug_cells = 0
 	for y in range(y0, y1 + 1):
 		for x in range(x0, x1 + 1):
 			var dx := x - cx
@@ -123,6 +125,7 @@ func dig_circle(cx: int, cy: int, radius: int) -> int:
 				dug += GOLD_VALUE if cells[i] == GOLD else 1
 				dug_energy += 1 if cells[i] == ENERGY else 0
 				dug_drain += 1 if cells[i] == DRAIN else 0
+				dug_cells += 1
 				cells[i] = AIR
 	if dug > 0:
 		cells_changed.emit(Rect2i(x0, y0, x1 - x0 + 1, y1 - y0 + 1))
