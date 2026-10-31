@@ -56,6 +56,7 @@ func test_spawn_in_home_bases() -> void:
 		ok = ok and tank.home_rect.has_point(Vector2i(tank.global_position))
 		ok = ok and gm.terrain.get_cell(roundi(tank.global_position.x), roundi(tank.global_position.y)) == TerrainData.BASE_START
 	check(ok, "every tank starts inside its own base")
+	check_eq(gm.worms.size(), 1, "one worm whatever the player count")
 	gm.manager.free()
 
 

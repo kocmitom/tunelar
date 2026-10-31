@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.24.2] - 2026-10-31
+
+### Changed
+- Every round has exactly one dune worm, whatever the player count, instead of one per 2 players.
+
 ## [0.24.1] - 2026-10-31
 
 ### Changed

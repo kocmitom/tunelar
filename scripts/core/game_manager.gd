@@ -132,16 +132,15 @@ func start_round(new_seed: int) -> void:
 	for worm in worms:
 		worm.free()
 	worms.clear()
-	# One worm per 2 players, placed from the map seed so every PC agrees.
+	# One worm per round, placed from the map seed so every PC agrees.
 	var worm_rng := RandomNumberGenerator.new()
 	worm_rng.seed = terrain.map_seed
-	for i in tanks.size() / 2:
-		var worm := Worm.new()
-		worm.terrain = terrain
-		worm.tanks = tanks
-		manager.world_root.add_child(worm)
-		worm.spawn(Worm.spawn_point(terrain, worm_rng))
-		worms.append(worm)
+	var worm := Worm.new()
+	worm.terrain = terrain
+	worm.tanks = tanks
+	manager.world_root.add_child(worm)
+	worm.spawn(Worm.spawn_point(terrain, worm_rng))
+	worms.append(worm)
 	for i in tanks.size():
 		tanks[i].home_rect = terrain.base_rects[i]
 		tanks[i].money = 0
