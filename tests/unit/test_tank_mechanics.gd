@@ -87,23 +87,6 @@ func test_low_energy_slows_digging_only() -> void:
 	empty_t.free()
 
 
-func test_turret_turns_on_its_own() -> void:
-	var terrain := TerrainData.new()
-	var tank := _spawn(terrain, Vector2(60, 100))
-	_drive(tank, Vector2.RIGHT, 0.2)
-	check_eq(tank.facing, Vector2.RIGHT, "without turret mode the barrel follows the movement")
-	tank.turret = true
-	tank.turn_turret(0.5, -1.0)
-	check(tank.facing.is_equal_approx(Vector2.UP), "turning left rotates counter-clockwise")
-	check(tank.fire_directions()[0].is_equal_approx(Vector2.UP), "shots follow the barrel")
-	check(is_equal_approx(tank.barrel.rotation, -PI / 2.0), "barrel sprite points along the barrel")
-	tank.turn_turret(0.5, -1.0)
-	check(is_equal_approx(tank.turret_angle, -Tank.TURRET_LIMIT), "the barrel never turns behind the tank")
-	_drive(tank, Vector2.DOWN, 0.2)
-	check(tank.facing.is_equal_approx(Vector2.RIGHT), "the barrel turns with the tank")
-	tank.free()
-
-
 func test_bedrock_blocks() -> void:
 	var terrain := TerrainData.new()
 	for y in range(80, 120):

@@ -21,12 +21,11 @@ func test_inputs_wait_for_every_slot() -> void:
 	net._receive_input(tick + 1, 0, Vector2.UP, false)
 	net._receive_input(tick, 0, Vector2.RIGHT, false)
 	check(net.take_inputs(tick).is_empty(), "slot 1 still missing")
-	net._receive_input(tick, 1, Vector2.DOWN, false, -1.0)
+	net._receive_input(tick, 1, Vector2.DOWN, false)
 	var inputs: Array[Dictionary] = net.take_inputs(tick)
 	check_eq(inputs.size(), 3, "complete once all slots arrived")
 	check_eq(inputs[0]["move"], Vector2.RIGHT, "slot 0 input")
 	check(inputs[2]["fire"], "slot 2 fire")
-	check_eq(inputs[1]["turn"], -1.0, "slot 1 turret turn")
 	check(net.take_inputs(tick).is_empty(), "a tick is taken once")
 	net.free()
 
@@ -41,7 +40,6 @@ func test_disconnected_slot_is_idle() -> void:
 	check_eq(inputs.size(), 2, "tick runs without the gone peer")
 	check_eq(inputs[1]["move"], Vector2.ZERO, "gone slot does not move")
 	check(not inputs[1]["fire"], "gone slot does not fire")
-	check_eq(inputs[1]["turn"], 0.0, "gone slot does not turn")
 	net.free()
 
 
@@ -96,26 +94,6 @@ func test_sample_local_splits_devices() -> void:
 	check_eq(pair[1]["move"], Vector2.RIGHT, "player 2 on arrows")
 	check(pair[1]["fire"], "Enter fires for player 2")
 	check_eq(InputRouter.device_label(1), "Arrows + Enter", "lobby label for player 2")
-	router.free()
-
-
-func test_turret_aim_keys() -> void:
-	var router := InputRouter.new()
-	router.assign_devices([] as Array[int])
-	_press_keys(router, [KEY_W, KEY_RIGHT])
-	check(router.sample_local(1)[0]["move"].is_equal_approx(Vector2(1, -1).normalized()), "without turret mode WASD and the arrows both drive")
-	router.turret = true
-	var solo := router.sample_local(1)
-	check_eq(solo[0]["move"], Vector2.RIGHT, "in turret mode a lone player drives with the arrows")
-	check_eq(solo[0]["turn"], 0.0, "W does not drive or turn")
-	_press_keys(router, [KEY_D])
-	check_eq(router.sample_local(1)[0]["turn"], 1.0, "D turns the turret right")
-	_press_keys(router, [KEY_H, KEY_KP_6])
-	var pair := router.sample_local(2)
-	check_eq(pair[0]["turn"], 1.0, "player 1 turns with F/H")
-	check_eq(pair[1]["move"], Vector2.RIGHT, "player 2 still drives with the arrows")
-	check_eq(pair[1]["turn"], 1.0, "player 2 turns with numpad 4/6")
-	check_eq(InputRouter.device_label(0, true), "WASD + F/H + Space", "turret lobby label for player 1")
 	router.free()
 
 

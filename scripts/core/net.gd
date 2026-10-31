@@ -10,7 +10,7 @@ const MAX_PLAYERS := 6
 const SEARCH_TIME := 1.5
 const BROADCAST_INTERVAL := 1.0
 const INPUT_DELAY := 2
-const IDLE := {"move": Vector2.ZERO, "fire": false, "turn": 0.0}
+const IDLE := {"move": Vector2.ZERO, "fire": false}
 const GAME_SCENE := "res://scenes/ui/viewport_grid.tscn"
 const LOBBY_SCENE := "res://scenes/ui/lobby.tscn"
 
@@ -26,15 +26,13 @@ var in_match := false
 var match_seed := 0
 # Index into GameManager.MAP_SIZE_NAMES, set by the host for the whole lobby.
 var map_size := 1
-# Barrels turn on their own, set by the host for the whole lobby.
-var turret_mode := false
 # One entry per slot, so a PC with two players appears twice.
 var slot_peers: Array[int] = []
 # Player name per slot, fixed at the match start.
 var slot_names: Array = []
 var local_slots: Array[int] = []
 var sent_tick := 0
-# inputs[tick][slot] = {"move": Vector2, "fire": bool, "turn": float}, null until received.
+# inputs[tick][slot] = {"move": Vector2, "fire": bool}, null until received.
 var inputs := {}
 # tunings[tick] = [[key, value], ...], applied right before that tick is simulated.
 var tunings := {}
@@ -137,7 +135,7 @@ func _on_peer_disconnected(id: int) -> void:
 				gone_slots[slot] = true
 	if is_host:
 		players.erase(id)
-		_set_players.rpc(players, map_size, turret_mode)
+		_set_players.rpc(players, map_size)
 
 
 func add_local_player() -> void:
@@ -154,7 +152,7 @@ func _register(new_name: String, count: int) -> void:
 	var sender := multiplayer.get_remote_sender_id()
 	var others: int = slot_order(players).size() - players.get(sender, []).size()
 	players[sender] = _names(new_name, mini(maxi(count, 1), MAX_PLAYERS - others))
-	_set_players.rpc(players, map_size, turret_mode)
+	_set_players.rpc(players, map_size)
 
 
 func set_map_size(index: int) -> void:
@@ -164,25 +162,14 @@ func set_map_size(index: int) -> void:
 @rpc("any_peer", "call_local", "reliable")
 func _request_map_size(index: int) -> void:
 	map_size = index
-	_set_players.rpc(players, map_size, turret_mode)
+	_set_players.rpc(players, map_size)
 
 
-func set_turret_mode(on: bool) -> void:
-	_request_turret_mode.rpc_id(1, on)
-
-
-@rpc("any_peer", "call_local", "reliable")
-func _request_turret_mode(on: bool) -> void:
-	turret_mode = on
-	_set_players.rpc(players, map_size, turret_mode)
-
-
-# Reliable and ahead of _start_match, so every PC starts with the same map size and turret mode.
+# Reliable and ahead of _start_match, so every PC starts with the same map size.
 @rpc("authority", "call_local", "reliable")
-func _set_players(list: Dictionary, size: int, turret: bool) -> void:
+func _set_players(list: Dictionary, size: int) -> void:
 	players = list
 	map_size = size
-	turret_mode = turret
 	var own: Array = players.get(multiplayer.get_unique_id(), [])
 	if not own.is_empty():
 		local_count = own.size()
@@ -284,12 +271,12 @@ func reset_inputs() -> void:
 func send_input(tick: int, local_inputs: Array[Dictionary]) -> void:
 	sent_tick = tick
 	for k in local_slots.size():
-		_receive_input.rpc(tick, local_slots[k], local_inputs[k]["move"], local_inputs[k]["fire"], local_inputs[k]["turn"])
+		_receive_input.rpc(tick, local_slots[k], local_inputs[k]["move"], local_inputs[k]["fire"])
 
 
 @rpc("any_peer", "call_local", "reliable")
-func _receive_input(tick: int, slot: int, move: Vector2, fire: bool, turn: float = 0.0) -> void:
-	_store(tick, slot, {"move": move, "fire": fire, "turn": turn})
+func _receive_input(tick: int, slot: int, move: Vector2, fire: bool) -> void:
+	_store(tick, slot, {"move": move, "fire": fire})
 
 
 # In a match the change lands on the tick after this PC's last sent input. Reliable RPCs from one peer arrive in order, so every PC has it before it can simulate that tick.

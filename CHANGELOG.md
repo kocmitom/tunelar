@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-10-31
+
+### Removed
+- Turret mode: the lobby toggle, the turret keys (F/H, numpad 4/6, gamepad right stick) and the turret settings in the developer panel are gone. The barrel always points where the tank drives, and a lone player on a PC drives with both WASD and the arrows again.
+
 ## [0.20.0] - 2026-10-31
 
 ### Added

@@ -8,7 +8,6 @@ extends Control
 @onready var start_button: Button = %StartButton
 # In GameManager.MAP_SIZE_NAMES order, after the "Map" label.
 @onready var map_buttons: Array = %MapSize.get_children().slice(1)
-@onready var turret_button: Button = %TurretButton
 @onready var version_label: Label = $VersionLabel
 
 
@@ -20,7 +19,6 @@ func _ready() -> void:
 	Input.joy_connection_changed.connect(func(_device: int, _connected: bool) -> void: _refresh())
 	for i in map_buttons.size():
 		map_buttons[i].pressed.connect(Net.set_map_size.bind(i))
-	turret_button.toggled.connect(Net.set_turret_mode)
 	Net.start()
 	_refresh()
 	start_button.grab_focus()
@@ -41,7 +39,7 @@ func _refresh() -> void:
 			var label := Label.new()
 			label.text = Net.players[id][k]
 			if id == my_id and own.size() > 1:
-				label.text += "  (%s)" % InputRouter.device_label(k, Net.turret_mode)
+				label.text += "  (%s)" % InputRouter.device_label(k)
 			label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			label.add_theme_font_size_override("font_size", 28)
 			label.add_theme_color_override("font_color", GameManager.PLAYER_COLORS[slot])
@@ -54,8 +52,6 @@ func _refresh() -> void:
 	for i in map_buttons.size():
 		map_buttons[i].set_pressed_no_signal(i == Net.map_size)
 		map_buttons[i].disabled = own.is_empty()
-	turret_button.set_pressed_no_signal(Net.turret_mode)
-	turret_button.disabled = own.is_empty()
 
 
 func _on_add_button_pressed() -> void:

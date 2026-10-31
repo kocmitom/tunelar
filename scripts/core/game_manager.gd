@@ -44,7 +44,7 @@ func _ready() -> void:
 	await manager.ready
 	var player_count := router.assign_devices(Input.get_connected_joypads())
 	if Net.in_match:
-		setup(Net.slot_peers.size(), Net.match_seed, Net.local_slots, Net.map_size, Net.turret_mode)
+		setup(Net.slot_peers.size(), Net.match_seed, Net.local_slots, Net.map_size)
 	else:
 		setup(player_count)
 
@@ -63,7 +63,7 @@ func _physics_process(_delta: float) -> void:
 
 
 # local_slots are the players shown on this PC (all of them when empty).
-func setup(player_count: int, match_seed: int = randi(), local_slots: Array[int] = [], size_index: int = 1, turret: bool = false) -> void:
+func setup(player_count: int, match_seed: int = randi(), local_slots: Array[int] = [], size_index: int = 1) -> void:
 	if local_slots.is_empty():
 		local_slots = []
 		for i in player_count:
@@ -73,7 +73,6 @@ func setup(player_count: int, match_seed: int = randi(), local_slots: Array[int]
 	tanks.clear()
 	huds.clear()
 	rng.seed = match_seed
-	router.turret = turret
 
 	terrain = TerrainData.new(map_size.x, map_size.y)
 	renderer = TerrainRenderer.new()
@@ -88,7 +87,6 @@ func setup(player_count: int, match_seed: int = randi(), local_slots: Array[int]
 		tank.color = PLAYER_COLORS[i]
 		tank.terrain = terrain
 		tank.jelly = jelly
-		tank.turret = turret
 		tank.fired.connect(_on_tank_fired)
 		tank.destroyed.connect(_on_tank_destroyed)
 		manager.world_root.add_child(tank)
@@ -145,7 +143,7 @@ func step() -> void:
 	simulate(inputs)
 
 
-# One fixed TICK_DT step. inputs[player_id] = {"move": Vector2, "fire": bool, "turn": float}.
+# One fixed TICK_DT step. inputs[player_id] = {"move": Vector2, "fire": bool}.
 func simulate(inputs: Array[Dictionary]) -> void:
 	tick += 1
 	Net.apply_tunings(tick)
@@ -165,8 +163,6 @@ func simulate(inputs: Array[Dictionary]) -> void:
 		var input := inputs[tank.player_id]
 		tank.tick(TICK_DT)
 		tank.step_movement(TICK_DT, input["move"])
-		if tank.turret:
-			tank.turn_turret(TICK_DT, input["turn"])
 		if input["fire"]:
 			tank.try_fire()
 

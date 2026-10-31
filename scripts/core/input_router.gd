@@ -1,27 +1,24 @@
 class_name InputRouter
 extends Node
-## Tracks raw keyboard/joypad state and exposes uniform per-player actions (move, fire, turn).
+## Tracks raw keyboard/joypad state and exposes uniform per-player actions (move, fire).
 
 const MAX_PLAYERS := 6
 const DEADZONE := 0.5
 const KEYBOARD_BINDINGS := {
 	PlayerConfig.DeviceType.KEYBOARD_A: {
 		"up": [KEY_W], "down": [KEY_S], "left": [KEY_A], "right": [KEY_D],
-		"fire": [KEY_SPACE], "turn_left": [KEY_F], "turn_right": [KEY_H],
+		"fire": [KEY_SPACE],
 	},
 	PlayerConfig.DeviceType.KEYBOARD_B: {
 		"up": [KEY_UP], "down": [KEY_DOWN], "left": [KEY_LEFT], "right": [KEY_RIGHT],
-		"fire": [KEY_ENTER, KEY_KP_0], "turn_left": [KEY_KP_4], "turn_right": [KEY_KP_6],
+		"fire": [KEY_ENTER, KEY_KP_0],
 	},
 }
 const JOY_FIRE := JOY_BUTTON_A
 
 var players: Array[PlayerConfig] = []
-# Turret mode: a lone player aims with A/D and drives with the arrows.
-var turret := false
 var _keys := {}
 var _joy_axes := {}
-var _joy_turn := {}
 var _joy_buttons := {}
 # Presses since the last sample(), so taps shorter than one tick are not lost.
 var _keys_latched := {}
@@ -61,8 +58,6 @@ func process_input(event: InputEvent) -> void:
 			axes.x = event.axis_value
 		elif event.axis == JOY_AXIS_LEFT_Y:
 			axes.y = event.axis_value
-		elif event.axis == JOY_AXIS_RIGHT_X:
-			_joy_turn[event.device] = event.axis_value
 		_joy_axes[event.device] = axes
 	elif event is InputEventJoypadButton:
 		var button := Vector2i(event.device, event.button_index)
@@ -93,23 +88,11 @@ func is_fire_pressed(player_id: int) -> bool:
 	return _action(player_id, "fire", JOY_FIRE)
 
 
-# Turret turn from -1 (counter-clockwise) to 1 (clockwise).
-func get_turn(player_id: int) -> float:
-	if player_id >= players.size():
-		return 0.0
-	var cfg := players[player_id]
-	if cfg.device_type == PlayerConfig.DeviceType.JOYPAD:
-		var turn: float = _joy_turn.get(cfg.device_index, 0.0)
-		return turn if absf(turn) >= DEADZONE else 0.0
-	return _key(cfg, "turn_right") - _key(cfg, "turn_left")
-
-
 # Input for one simulation tick. Fire also reports taps since the previous sample.
 func sample(player_id: int) -> Dictionary:
 	var input := {
 		"move": get_movement_vector(player_id),
 		"fire": is_fire_pressed(player_id) or _action(player_id, "fire", JOY_FIRE, true),
-		"turn": get_turn(player_id),
 	}
 	if player_id < players.size():
 		var cfg := players[player_id]
@@ -123,17 +106,12 @@ func sample(player_id: int) -> Dictionary:
 
 # One tick of input for this PC's single LAN player: every assigned device drives it.
 func sample_all() -> Dictionary:
-	var input := {"move": Vector2.ZERO, "fire": false, "turn": 0.0}
+	var input := {"move": Vector2.ZERO, "fire": false}
 	for cfg in players:
 		var s := sample(cfg.player_id)
-		if turret and cfg.device_type == PlayerConfig.DeviceType.KEYBOARD_A:
-			input["turn"] += signf(s["move"].x)
-		else:
-			input["move"] += s["move"]
+		input["move"] += s["move"]
 		input["fire"] = input["fire"] or s["fire"]
-		input["turn"] += s["turn"]
 	input["move"] = input["move"].limit_length(1.0)
-	input["turn"] = clampf(input["turn"], -1.0, 1.0)
 	return input
 
 
@@ -149,11 +127,11 @@ func sample_local(count: int) -> Array[Dictionary]:
 
 
 # Controls of local player k in assign_devices order (fewer than 6 gamepads).
-static func device_label(k: int, turret := false) -> String:
+static func device_label(k: int) -> String:
 	if k == 0:
-		return "WASD + F/H + Space" if turret else "WASD + Space"
+		return "WASD + Space"
 	if k == 1:
-		return "Arrows + Num 4/6 + Enter" if turret else "Arrows + Enter"
+		return "Arrows + Enter"
 	return "Gamepad %d" % (k - 1)
 
 

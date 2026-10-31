@@ -36,12 +36,8 @@ static var RADAR_PER_LEVEL := 0.25
 enum Special { SPREAD, LASER, JELLY, RADAR }
 static var ENERGY_COST_LASER := 1.25
 static var ENERGY_COST_SPREAD := 1.0
-# Radians per second the barrel turns in turret mode, up to TURRET_LIMIT either side of the front.
-static var TURRET_SPEED := PI
-static var TURRET_LIMIT := PI / 2.0
 
 static var _texture: ImageTexture
-static var _barrel_texture: ImageTexture
 
 @export var tank_radius: int = 3
 
@@ -50,10 +46,7 @@ var color: Color = Color.WHITE
 var terrain: TerrainData
 var energy: float = MAX_ENERGY
 var shields: float = MAX_SHIELDS
-# Barrel direction: the tank front turned by turret_angle.
 var facing: Vector2 = Vector2.UP
-var turret: bool = false
-var turret_angle: float = 0.0
 var home_rect: Rect2i
 var is_dead: bool = false
 var fire_cooldown: float = 0.0
@@ -68,19 +61,14 @@ var jelly: Jelly
 var _pad: int = -1
 
 @onready var sprite: Sprite2D = $Sprite2D
-@onready var barrel: Sprite2D = $Barrel
 @onready var shape: CollisionShape2D = $CollisionShape2D
 
 
 func _ready() -> void:
 	if _texture == null:
 		_texture = _build_texture()
-		_barrel_texture = _build_barrel_texture()
 	sprite.texture = _texture
 	sprite.self_modulate = color
-	barrel.texture = _barrel_texture
-	barrel.offset = Vector2(0.0, -1.5)
-	barrel.self_modulate = color
 
 
 func tick(delta: float) -> void:
@@ -144,7 +132,7 @@ func step_movement(delta: float, input_dir: Vector2) -> void:
 		energy = maxf(0.0, energy - ENERGY_DRAIN_IDLE * delta)
 		return
 
-	facing = dir.rotated(turret_angle)
+	facing = dir
 	rotation = dir.angle() + PI / 2.0
 
 	# The tunnel is DIG_MARGIN wider than the body; probe just outside it so solid earth always reads as DIRT.
@@ -172,12 +160,6 @@ func step_movement(delta: float, input_dir: Vector2) -> void:
 	energy = clampf(energy + terrain.dug_energy * TerrainData.ENERGY_VALUE - terrain.dug_drain * TerrainData.DRAIN_VALUE, 0.0, max_energy())
 	if special == Special.JELLY:
 		jelly.lay(global_position, player_id, color)
-
-
-func turn_turret(delta: float, turn: float) -> void:
-	turret_angle = clampf(turret_angle + turn * TURRET_SPEED * delta, -TURRET_LIMIT, TURRET_LIMIT)
-	facing = Vector2.UP.rotated(rotation + turret_angle)
-	barrel.rotation = turret_angle
 
 
 func try_fire() -> bool:
@@ -244,8 +226,6 @@ func respawn(pos: Vector2) -> void:
 	position = pos
 	rotation = 0.0
 	facing = Vector2.UP
-	turret_angle = 0.0
-	barrel.rotation = 0.0
 	velocity = Vector2.ZERO
 	energy = max_energy()
 	shields = max_shields()
@@ -269,10 +249,6 @@ static func _build_texture() -> ImageTexture:
 	for y in range(2, 7):
 		for x in range(1, 6):
 			img.set_pixel(x, y, Color.WHITE)
-	return ImageTexture.create_from_image(img)
-
-
-static func _build_barrel_texture() -> ImageTexture:
-	var img := Image.create(1, 4, false, Image.FORMAT_RGBA8)
-	img.fill(Color(0.85, 0.85, 0.85))
+	for y in range(0, 4):
+		img.set_pixel(3, y, Color(0.85, 0.85, 0.85))
 	return ImageTexture.create_from_image(img)
