@@ -134,10 +134,10 @@ func test_base_recharges_shields() -> void:
 	tank.respawn(tank.position)
 	tank.shields = 0.0
 	tank.energy = 0.0
-	for i in 2 * GameManager.TICK_RATE:
+	for i in GameManager.TICK_RATE / 2:
 		tank.tick(DT)
-	check_near(tank.shields / Tank.MAX_SHIELDS, tank.energy / Tank.MAX_ENERGY, 0.02, "shields refill at the battery's pace")
-	for i in 3 * GameManager.TICK_RATE:
+	check_near(tank.shields, Tank.SHIELD_RECHARGE_BASE * 0.5, 0.02, "a shield refills in a second")
+	for i in GameManager.TICK_RATE:
 		tank.tick(DT)
 	check_eq(tank.shields, Tank.MAX_SHIELDS, "shields capped at max")
 	tank.shields = 1.0

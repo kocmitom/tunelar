@@ -19,8 +19,8 @@ const DIG_MARGIN := 1
 const ENERGY_COST_FIRE := 8.0
 const FIRE_COOLDOWN := 0.25
 const MAX_SHIELDS := 1.0
-# Refills an empty set in the same time the base refills an empty battery.
-const SHIELD_RECHARGE_BASE := MAX_SHIELDS * ENERGY_RECHARGE_BASE / MAX_ENERGY
+# Shields per second in a base.
+const SHIELD_RECHARGE_BASE := 1.0
 
 enum Upgrade { SHIELD, ENERGY, SPEED, RADAR }
 const MAX_LEVEL := 5

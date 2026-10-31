@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.17.4] - 2026-10-31
+
+### Changed
+- Shields recharge 4x faster in a base: one shield per second instead of one every 4 seconds.
+
 ## [0.17.3] - 2026-10-31
 
 ### Changed
