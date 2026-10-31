@@ -25,6 +25,7 @@ const MAP_AREA_SCALES: Array[float] = [0.5, 1.0, 2.0, 3.0]
 var map_size: Vector2i
 var terrain: TerrainData
 var renderer: TerrainRenderer
+var jelly: Jelly
 var bullets_root: Node2D
 var tanks: Array[Tank] = []
 var huds: Array[PlayerHud] = []
@@ -75,12 +76,15 @@ func setup(player_count: int, match_seed: int = randi(), local_slots: Array[int]
 	renderer = TerrainRenderer.new()
 	renderer.base_colors = PLAYER_COLORS.slice(0, player_count)
 	manager.world_root.add_child(renderer)
+	jelly = Jelly.new()
+	manager.world_root.add_child(jelly)
 
 	for i in player_count:
 		var tank: Tank = TankScene.instantiate()
 		tank.player_id = i
 		tank.color = PLAYER_COLORS[i]
 		tank.terrain = terrain
+		tank.jelly = jelly
 		tank.fired.connect(_on_tank_fired)
 		manager.world_root.add_child(tank)
 		tanks.append(tank)
@@ -107,12 +111,14 @@ static func map_size_for(player_count: int, size_index: int = 1) -> Vector2i:
 
 func start_round(new_seed: int) -> void:
 	terrain.generate(new_seed, tanks.size())
+	jelly.reset(map_size)
 	for bullet in bullets_root.get_children():
 		bullet.free()
 	for i in tanks.size():
 		tanks[i].home_rect = terrain.base_rects[i]
 		tanks[i].money = 0
 		tanks[i].levels = [0, 0, 0, 0]
+		tanks[i].special = -1
 		tanks[i].kills = 0
 		tanks[i].respawn(Vector2(terrain.base_rects[i].get_center()))
 	for hud in huds:
@@ -143,6 +149,7 @@ func simulate(inputs: Array[Dictionary]) -> void:
 
 	for bullet in bullets_root.get_children():
 		bullet.step(TICK_DT)
+	jelly.step()
 
 	for tank in tanks:
 		if tank.is_dead:
@@ -171,15 +178,27 @@ func _check_round_end() -> void:
 
 func _update_huds() -> void:
 	for hud in huds:
-		hud.update_hud(tanks[hud.player_id])
+		var tank := tanks[hud.player_id]
+		hud.update_hud(tank, tank.closest(tanks))
 
 
 func _on_tank_fired(tank: Tank) -> void:
-	var bullet: Bullet = BulletScene.instantiate()
-	bullet.terrain = terrain
-	bullet.tanks = tanks
-	bullet.shooter = tank
-	bullet.position = tank.muzzle_position()
-	bullet.velocity = tank.facing * Bullet.BULLET_SPEED
-	bullets_root.add_child(bullet)
-	bullet.reset_physics_interpolation()
+	if tank.special == Tank.Special.LASER:
+		var laser := Laser.new()
+		laser.terrain = terrain
+		laser.tanks = tanks
+		laser.shooter = tank
+		laser.position = tank.muzzle_position()
+		bullets_root.add_child(laser)
+		laser.reset_physics_interpolation()
+		laser.fire(tank.facing)
+		return
+	for dir in tank.fire_directions():
+		var bullet: Bullet = BulletScene.instantiate()
+		bullet.terrain = terrain
+		bullet.tanks = tanks
+		bullet.shooter = tank
+		bullet.position = tank.muzzle_position(dir)
+		bullet.velocity = dir * Bullet.BULLET_SPEED
+		bullets_root.add_child(bullet)
+		bullet.reset_physics_interpolation()

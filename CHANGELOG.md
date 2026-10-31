@@ -4,6 +4,15 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-10-31
+
+### Added
+- Specials: the corner pads in other players' bases are free switches. Driving onto one selects its special and replaces the one you had; driving onto the active one again switches it off. Only one special is active at a time, and it is kept after a death but resets every round. The money line shows the active special.
+  - Shield pad: 5-way cannon, firing forward, to both sides and halfway between, for the cost of one shot.
+  - Battery pad: laser instead of the cannon. The beam is instant, shows as a short red line, does one damage and stops at the first dirt or rock without digging it. It costs 25 energy per shot, with the same fire rate.
+  - Speed pad: jelly. Your tank leaves a green trail that lasts 5 seconds; other tanks driving over it move at digging speed, without the energy drain.
+  - View pad: radar. A red arrow under the money line points toward the closest player.
+
 ## [0.13.2] - 2026-10-31
 
 ### Changed

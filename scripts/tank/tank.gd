@@ -29,6 +29,9 @@ const UPGRADE_COST := 3000
 const ENERGY_PER_LEVEL := 0.5
 const SPEED_PER_LEVEL := 0.25
 const RADAR_PER_LEVEL := 0.25
+# Free switches on the pads of other players' bases, in Upgrade pad order; one is active at a time.
+enum Special { SPREAD, LASER, JELLY, RADAR }
+const ENERGY_COST_LASER := 25.0
 
 static var _texture: ImageTexture
 
@@ -47,7 +50,10 @@ var kills: int = 0
 # Value of the dirt and gold dug this round.
 var money: int = 0
 var levels: Array[int] = [0, 0, 0, 0]
-# Home pad under the tank; a pad buys one level per visit.
+# Active Special, or -1.
+var special: int = -1
+var jelly: Jelly
+# Pad under the tank; a pad acts once per visit.
 var _pad: int = -1
 
 @onready var sprite: Sprite2D = $Sprite2D
@@ -72,11 +78,18 @@ func tick(delta: float) -> void:
 		recharge += ENERGY_RECHARGE_BASE * max_energy() / MAX_ENERGY
 		shields = minf(max_shields(), shields + SHIELD_RECHARGE_BASE * delta)
 	energy = minf(max_energy(), energy + recharge * delta)
-	var pad := TerrainData.pad_at(home_rect, cell)
+	var pad := -1
+	var home := false
+	for rect in terrain.base_rects:
+		if rect.has_point(cell):
+			pad = TerrainData.pad_at(rect, cell)
+			home = rect == home_rect
 	if pad != _pad:
 		_pad = pad
-		if pad >= 0:
+		if pad >= 0 and home:
 			try_upgrade(pad)
+		elif pad >= 0:
+			toggle_special(pad)
 
 
 func _in_base() -> bool:
@@ -91,6 +104,11 @@ func try_upgrade(upgrade: int) -> bool:
 	money -= cost
 	levels[upgrade] += 1
 	return true
+
+
+# Selects the special, or switches it off when it is already active.
+func toggle_special(new_special: int) -> void:
+	special = -1 if special == new_special else new_special
 
 
 func max_energy() -> float:
@@ -109,6 +127,17 @@ func reveal_radius() -> int:
 	return roundi(FogOfWar.reveal_radius(tank_radius) * (1.0 + RADAR_PER_LEVEL * levels[Upgrade.RADAR]))
 
 
+# Nearest living tank other than this one, or null.
+func closest(others: Array[Tank]) -> Tank:
+	var best: Tank = null
+	for other in others:
+		if other == self or other.is_dead:
+			continue
+		if best == null or global_position.distance_squared_to(other.global_position) < global_position.distance_squared_to(best.global_position):
+			best = other
+	return best
+
+
 func step_movement(delta: float, input_dir: Vector2) -> void:
 	var dir := snap_direction(input_dir)
 	if is_dead or dir == Vector2.ZERO:
@@ -125,9 +154,11 @@ func step_movement(delta: float, input_dir: Vector2) -> void:
 	var digging := probe_cell == TerrainData.DIRT or probe_cell == TerrainData.GOLD or probe_cell == TerrainData.ENERGY
 	var current_speed := SPEED_CLEAR
 	var drain := ENERGY_DRAIN_MOVE_CLEAR
-	if digging:
+	# Other players' jelly slows like digging, without the drain.
+	if digging or (jelly != null and jelly.slows(self)):
 		# Below LOW_ENERGY digging slows down, crawling at SPEED_FACTOR_EMPTY when the battery is flat.
 		current_speed = SPEED_DIGGING * lerpf(SPEED_FACTOR_EMPTY, 1.0, clampf(energy / LOW_ENERGY, 0.0, 1.0))
+	if digging:
 		drain = ENERGY_DRAIN_DIGGING
 	current_speed *= speed_factor()
 
@@ -140,19 +171,29 @@ func step_movement(delta: float, input_dir: Vector2) -> void:
 	move_and_collide(velocity * delta)
 	money += terrain.dig_circle(roundi(global_position.x), roundi(global_position.y), dig_radius)
 	energy = minf(max_energy(), energy + terrain.dug_energy * TerrainData.ENERGY_VALUE)
+	if special == Special.JELLY:
+		jelly.lay(global_position, player_id)
 
 
 func try_fire() -> bool:
-	if is_dead or energy < ENERGY_COST_FIRE or fire_cooldown > 0.0 or _in_base():
+	var cost := ENERGY_COST_LASER if special == Special.LASER else ENERGY_COST_FIRE
+	if is_dead or energy < cost or fire_cooldown > 0.0 or _in_base():
 		return false
-	energy -= ENERGY_COST_FIRE
+	energy -= cost
 	fire_cooldown = FIRE_COOLDOWN
 	fired.emit(self)
 	return true
 
 
-func muzzle_position() -> Vector2:
-	return global_position + facing * (tank_radius + 2)
+# The 5-way cannon also fires to both sides and halfway between.
+func fire_directions() -> Array[Vector2]:
+	if special != Special.SPREAD:
+		return [facing]
+	return [facing, facing.rotated(-PI / 4.0), facing.rotated(PI / 4.0), facing.rotated(-PI / 2.0), facing.rotated(PI / 2.0)]
+
+
+func muzzle_position(dir: Vector2 = facing) -> Vector2:
+	return global_position + dir * (tank_radius + 2)
 
 
 # Each full shield absorbs one hit; a hit with no full shield left destroys the tank. The own base is a safe zone.

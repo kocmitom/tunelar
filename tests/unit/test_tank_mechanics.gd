@@ -228,6 +228,83 @@ func test_home_pads_buy_upgrades() -> void:
 	tank.free()
 
 
+func test_enemy_pads_switch_specials() -> void:
+	var terrain := TerrainData.new()
+	var home := Rect2i(20, 20, TerrainData.BASE_SIZE, TerrainData.BASE_SIZE)
+	var other := Rect2i(150, 20, TerrainData.BASE_SIZE, TerrainData.BASE_SIZE)
+	terrain.base_rects = [home, other]
+	var tank := _spawn(terrain, Vector2(other.get_center()))
+	tank.home_rect = home
+	var pads := TerrainData.pad_rects(other)
+
+	tank.position = Vector2(pads[Tank.Special.LASER].get_center())
+	tank.tick(DT)
+	check_eq(tank.special, Tank.Special.LASER, "enemy pad selects its special")
+	check_eq(tank.levels, [0, 0, 0, 0] as Array[int], "enemy pads buy no upgrades")
+	tank.tick(DT)
+	check_eq(tank.special, Tank.Special.LASER, "staying on the pad keeps it")
+	tank.position = Vector2(pads[Tank.Special.JELLY].get_center())
+	tank.tick(DT)
+	check_eq(tank.special, Tank.Special.JELLY, "another pad replaces the special")
+	_visit(tank, Vector2(pads[Tank.Special.JELLY].get_center()))
+	check_eq(tank.special, -1, "the active pad switches it off")
+	_visit(tank, Vector2(pads[Tank.Special.RADAR].get_center()))
+
+	tank.money = 100 * Tank.UPGRADE_COST
+	tank.position = Vector2(TerrainData.pad_rects(home)[Tank.Upgrade.SPEED].get_center())
+	tank.tick(DT)
+	check_eq(tank.special, Tank.Special.RADAR, "home pads keep the special")
+	tank.respawn(Vector2(home.get_center()))
+	check_eq(tank.special, Tank.Special.RADAR, "respawn keeps the special")
+	tank.free()
+
+
+func test_closest() -> void:
+	var terrain := TerrainData.new()
+	var tank := _spawn(terrain, Vector2(60, 100))
+	var near := _spawn(terrain, Vector2(90, 100))
+	var far := _spawn(terrain, Vector2(60, 180))
+	var tanks: Array[Tank] = [tank, far, near]
+	check_eq(tank.closest(tanks), near, "nearest other tank")
+	near.is_dead = true
+	check_eq(tank.closest(tanks), far, "dead tanks skipped")
+	far.is_dead = true
+	check_eq(tank.closest(tanks), null, "nobody left")
+	tank.free()
+	near.free()
+	far.free()
+
+
+func test_jelly_slows_others() -> void:
+	var terrain := TerrainData.new()
+	for x in range(40, 280):
+		terrain.dig_circle(x, 100, 5)
+	var jelly := Jelly.new()
+	jelly.reset(Vector2i(terrain.width, terrain.height))
+	var layer := _spawn(terrain, Vector2(100, 100))
+	layer.jelly = jelly
+	layer.special = Tank.Special.JELLY
+	var follower := _spawn(terrain, Vector2(60, 100))
+	follower.jelly = jelly
+	follower.player_id = 1
+	for i in GameManager.TICK_RATE:
+		jelly.step()
+		layer.step_movement(DT, Vector2.RIGHT)
+	check_near(layer.position.x, 100.0 + Tank.SPEED_CLEAR, 1.0, "own jelly does not slow")
+	follower.position = Vector2(120, 100)
+	_drive(follower, Vector2.RIGHT, 0.5)
+	check_near(follower.position.x, 120.0 + Tank.SPEED_DIGGING * 0.5, 1.0, "other jelly slows to digging speed")
+	check_eq(follower.energy, Tank.MAX_ENERGY, "jelly costs no energy")
+	for i in Jelly.LIFETIME_TICKS:
+		jelly.step()
+	follower.position = Vector2(120, 100)
+	_drive(follower, Vector2.RIGHT, 0.25)
+	check_near(follower.position.x, 120.0 + Tank.SPEED_CLEAR * 0.25, 1.0, "jelly gone after 5 s")
+	layer.free()
+	follower.free()
+	jelly.free()
+
+
 func test_upgrade_effects() -> void:
 	var terrain := TerrainData.new()
 	for x in range(40, 200):

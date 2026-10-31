@@ -107,6 +107,54 @@ func test_fire_costs_energy() -> void:
 	tank.free()
 
 
+func test_spread_fire_directions() -> void:
+	var terrain := _corridor()
+	var tank := _spawn(terrain, Vector2(100, 100))
+	tank.facing = Vector2.RIGHT
+	check_eq(tank.fire_directions(), [Vector2.RIGHT] as Array[Vector2], "one direction without the 5-way cannon")
+	tank.special = Tank.Special.SPREAD
+	var dirs := tank.fire_directions()
+	check_eq(dirs.size(), 5, "five directions")
+	for expected in [Vector2.RIGHT, Vector2(1, 1).normalized(), Vector2(1, -1).normalized(), Vector2.UP, Vector2.DOWN]:
+		check(dirs.any(func(d: Vector2) -> bool: return d.is_equal_approx(expected)), "fires toward %s" % expected)
+	tank.free()
+
+
+func test_laser() -> void:
+	var terrain := _corridor()
+	var shooter := _spawn(terrain, Vector2(100, 100))
+	var target := _spawn(terrain, Vector2(160, 100))
+	shooter.special = Tank.Special.LASER
+	check(shooter.try_fire(), "laser fires")
+	check_eq(shooter.energy, Tank.MAX_ENERGY - Tank.ENERGY_COST_LASER, "laser costs ENERGY_COST_LASER")
+	var laser := Laser.new()
+	laser.terrain = terrain
+	laser.tanks = [shooter, target] as Array[Tank]
+	laser.shooter = shooter
+	laser.position = shooter.muzzle_position(Vector2.RIGHT)
+	tree.root.add_child(laser)
+	laser.fire(Vector2.RIGHT)
+	check_eq(target.shields, Tank.MAX_SHIELDS - 1.0, "one damage in the same tick")
+	check_near(laser.global_position.x + laser.end.x, 160.0 - target.tank_radius, 1.0, "beam ends at the target")
+	laser.free()
+
+	target.position = Vector2(400, 100)
+	laser = Laser.new()
+	laser.terrain = terrain
+	laser.tanks = [shooter, target] as Array[Tank]
+	laser.shooter = shooter
+	laser.position = shooter.muzzle_position(Vector2.RIGHT)
+	tree.root.add_child(laser)
+	laser.fire(Vector2.RIGHT)
+	var stop := roundi(laser.global_position.x + laser.end.x)
+	check_eq(terrain.get_cell(stop, 100), TerrainData.DIRT, "beam stops at the first dirt")
+	check_eq(terrain.get_cell(stop + 1, 100), TerrainData.DIRT, "dirt not dug")
+	laser.step(Laser.LIFETIME)
+	check(laser.is_queued_for_deletion(), "beam fades after LIFETIME")
+	shooter.free()
+	target.free()
+
+
 func test_shields_absorb_hits() -> void:
 	var terrain := _corridor()
 	var shooter := _spawn(terrain, Vector2(100, 100))
