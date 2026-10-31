@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.17.2] - 2026-10-31
+
+### Changed
+- The 5-way cannon is now a 3-way cannon: it fires forward and straight out to both sides, without the diagonal shots. It keeps its icon and still costs half a shot.
+
 ## [0.17.1] - 2026-10-31
 
 ### Fixed

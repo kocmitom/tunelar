@@ -3,7 +3,7 @@ extends CanvasLayer
 ## Per-viewport overlay: battery gauge, shields, money and upgrades, kills and round banner.
 
 # In Tank.Special order.
-const SPECIAL_NAMES := ["5-WAY", "LASER", "JELLY", "RADAR"]
+const SPECIAL_NAMES := ["3-WAY", "LASER", "JELLY", "RADAR"]
 # On-screen size of the 9x9 upgrade icons.
 const ICON_SIZE := 18
 

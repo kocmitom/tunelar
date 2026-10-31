@@ -178,11 +178,11 @@ func try_fire() -> bool:
 	return true
 
 
-# The 5-way cannon also fires to both sides and halfway between.
+# The 3-way cannon also fires to both sides.
 func fire_directions() -> Array[Vector2]:
 	if special != Special.SPREAD:
 		return [facing]
-	return [facing, facing.rotated(-PI / 4.0), facing.rotated(PI / 4.0), facing.rotated(-PI / 2.0), facing.rotated(PI / 2.0)]
+	return [facing, facing.rotated(-PI / 2.0), facing.rotated(PI / 2.0)]
 
 
 # Stops in front of bedrock along the barrel, so a tank touching a wall cannot shoot through it.

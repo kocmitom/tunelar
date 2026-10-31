@@ -204,7 +204,7 @@ func _on_tank_fired(tank: Tank) -> void:
 		bullet.volley = volley
 		bullet.position = tank.muzzle_position(dir)
 		bullet.velocity = dir * Bullet.BULLET_SPEED
-		# 5-way bullets never ricochet.
+		# 3-way bullets never ricochet.
 		if tank.special == Tank.Special.SPREAD:
 			bullet.max_bounces = 0
 		bullets_root.add_child(bullet)

@@ -121,14 +121,14 @@ func test_spread_fire_directions() -> void:
 	var terrain := _corridor()
 	var tank := _spawn(terrain, Vector2(100, 100))
 	tank.facing = Vector2.RIGHT
-	check_eq(tank.fire_directions(), [Vector2.RIGHT] as Array[Vector2], "one direction without the 5-way cannon")
+	check_eq(tank.fire_directions(), [Vector2.RIGHT] as Array[Vector2], "one direction without the 3-way cannon")
 	tank.special = Tank.Special.SPREAD
 	var dirs := tank.fire_directions()
-	check_eq(dirs.size(), 5, "five directions")
-	for expected in [Vector2.RIGHT, Vector2(1, 1).normalized(), Vector2(1, -1).normalized(), Vector2.UP, Vector2.DOWN]:
+	check_eq(dirs.size(), 3, "three directions")
+	for expected in [Vector2.RIGHT, Vector2.UP, Vector2.DOWN]:
 		check(dirs.any(func(d: Vector2) -> bool: return d.is_equal_approx(expected)), "fires toward %s" % expected)
-	check(tank.try_fire(), "5-way fires")
-	check_eq(tank.energy, Tank.MAX_ENERGY - Tank.ENERGY_COST_FIRE / 2.0, "5-way costs half a shot")
+	check(tank.try_fire(), "3-way fires")
+	check_eq(tank.energy, Tank.MAX_ENERGY - Tank.ENERGY_COST_FIRE / 2.0, "3-way costs half a shot")
 	tank.free()
 
 
