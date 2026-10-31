@@ -25,7 +25,7 @@ const GOLD_RADIUS_MIN := 2.0
 const GOLD_RADIUS_MAX := 4.0
 # Money per dug gold cell; a dirt cell is worth 1.
 const GOLD_VALUE := 10
-const ENERGY_COVERAGE := 0.01
+const ENERGY_COVERAGE := 0.005
 const ENERGY_RADIUS_MIN := 2.0
 const ENERGY_RADIUS_MAX := 4.0
 # Battery recharged per dug energy cell, so bigger blobs give more.

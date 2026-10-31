@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.15.3] - 2026-10-31
+
+### Changed
+- Energy veins are half as common: they cover 0.5% of the map instead of 1%.
+
 ## [0.15.2] - 2026-10-31
 
 ### Changed
