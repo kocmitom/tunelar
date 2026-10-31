@@ -101,13 +101,13 @@ func test_fire_costs_energy() -> void:
 	var shots := [0]
 	tank.fired.connect(func(_t: Tank) -> void: shots[0] += 1)
 	check(tank.try_fire(), "first shot fires")
-	check_eq(tank.energy, Tank.MAX_ENERGY - Tank.ENERGY_COST_FIRE, "fire costs 8")
+	check_eq(tank.energy, Tank.MAX_ENERGY - Tank.ENERGY_COST_FIRE, "fire costs ENERGY_COST_FIRE")
 	check(not tank.try_fire(), "cooldown blocks rapid fire")
 	tank.tick(Tank.FIRE_COOLDOWN)
 	var before := tank.energy
 	check(tank.try_fire(), "fires after cooldown")
-	check_eq(tank.energy, before - Tank.ENERGY_COST_FIRE, "second shot costs 8")
-	tank.energy = 5.0
+	check_eq(tank.energy, before - Tank.ENERGY_COST_FIRE, "second shot costs ENERGY_COST_FIRE")
+	tank.energy = 1.0
 	tank.tick(1.0)
 	check(not tank.try_fire(), "not enough energy")
 	check_eq(shots[0], 2, "fired signal per shot")
@@ -194,6 +194,11 @@ func test_shields_absorb_hits() -> void:
 	check(not target.is_dead, "target survives %d hits" % Tank.MAX_SHIELDS)
 	target.respawn(target.position)
 	check_eq(target.shields, Tank.MAX_SHIELDS, "respawn restores shields")
+	target.shields = 0.5
+	target.hit(shooter)
+	check(not target.is_dead and target.shields == 0.0, "a partly filled bar still absorbs a hit")
+	target.hit(shooter)
+	check(target.is_dead, "a hit on the empty bar destroys")
 	shooter.free()
 	target.free()
 

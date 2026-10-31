@@ -129,7 +129,7 @@ func test_base_recharges_shields() -> void:
 	tank.shields = 0.0
 	tank.energy = 0.0
 	tank.hit()
-	check(tank.is_dead, "a hit with no full shield destroys")
+	check(tank.is_dead, "a hit on an empty shield bar destroys")
 	tank.home_rect = terrain.base_rects[0]
 	tank.respawn(tank.position)
 	tank.shields = 0.0
@@ -137,7 +137,7 @@ func test_base_recharges_shields() -> void:
 	for i in GameManager.TICK_RATE / 2:
 		tank.tick(DT)
 	check_near(tank.shields, Tank.SHIELD_RECHARGE_BASE * 0.5, 0.02, "a shield refills in a second")
-	for i in GameManager.TICK_RATE:
+	for i in roundi(Tank.MAX_SHIELDS / Tank.SHIELD_RECHARGE_BASE) * GameManager.TICK_RATE:
 		tank.tick(DT)
 	check_eq(tank.shields, Tank.MAX_SHIELDS, "shields capped at max")
 	tank.shields = 1.0
@@ -223,7 +223,7 @@ func test_home_pads_buy_upgrades() -> void:
 	_visit(tank, pad)
 	check_eq(tank.levels[Tank.Upgrade.SHIELD], 2, "level 2 bought")
 	check_eq(tank.money, 0, "level 2 costs two UPGRADE_COST")
-	check_eq(tank.max_shields(), Tank.MAX_SHIELDS + 2, "each shield level adds a shield")
+	check_eq(tank.max_shields(), Tank.MAX_SHIELDS + 2 * Tank.SHIELDS_PER_LEVEL, "each shield level adds SHIELDS_PER_LEVEL")
 	check_eq(tank.levels, [2, 0, 0, 0] as Array[int], "only the shield pad upgraded")
 
 	tank.money = 100 * Tank.UPGRADE_COST
@@ -321,7 +321,7 @@ func test_upgrade_effects() -> void:
 	tank.shields = 0.0
 	tank.tick(20.0)
 	check_eq(tank.energy, Tank.MAX_ENERGY * 2.0, "two energy levels double the battery")
-	check_eq(tank.shields, Tank.MAX_SHIELDS + 2, "two shield levels add two shields")
+	check_eq(tank.shields, Tank.MAX_SHIELDS + 2 * Tank.SHIELDS_PER_LEVEL, "two shield levels add four shields")
 	tank.energy = 0.0
 	tank.tick(1.0)
 	check_near(tank.energy, 2.0 * Tank.ENERGY_RECHARGE_BASE + Tank.ENERGY_REGEN_PASSIVE, 0.001, "a bigger battery refills in the same time")

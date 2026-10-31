@@ -10,6 +10,8 @@ const COLOR := Color(1.0, 0.95, 0.5)
 var terrain: TerrainData
 var tanks: Array[Tank] = []
 var shooter: Tank
+# Credited with the hit instead of the shooter when set, as for shrapnel.
+var attacker: Tank
 var velocity: Vector2 = Vector2.ZERO
 var bounces: int = 0
 var max_bounces: int = MAX_BOUNCES
@@ -46,7 +48,7 @@ func step(delta: float) -> void:
 			if tank != shooter and not tank.is_dead and tank.global_position.distance_to(next) <= tank.tank_radius + 0.5:
 				if tank not in volley:
 					volley.append(tank)
-					tank.hit(shooter)
+					tank.hit(attacker if attacker else shooter)
 				_die()
 				return
 

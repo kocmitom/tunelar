@@ -3,7 +3,7 @@ extends CharacterBody2D
 ## Grid-aware tank: digs through dirt, is blocked by bedrock, runs on a battery.
 
 signal fired(tank: Tank)
-signal destroyed(tank: Tank)
+signal destroyed(tank: Tank, attacker: Tank)
 
 const MAX_ENERGY := 100.0
 const SPEED_CLEAR := 60.0
@@ -16,9 +16,11 @@ const ENERGY_REGEN_PASSIVE := 0.5
 const LOW_ENERGY := 10.0
 const SPEED_FACTOR_EMPTY := 0.25
 const DIG_MARGIN := 1
-const ENERGY_COST_FIRE := 8.0
-const FIRE_COOLDOWN := 0.25
-const MAX_SHIELDS := 1.0
+const ENERGY_COST_FIRE := 2.0
+const FIRE_COOLDOWN := 0.25 / 3.0
+# Hits the shield bar absorbs; each shield level adds SHIELDS_PER_LEVEL.
+const MAX_SHIELDS := 5.0
+const SHIELDS_PER_LEVEL := 2.0
 # Shields per second in a base.
 const SHIELD_RECHARGE_BASE := 1.0
 
@@ -31,7 +33,7 @@ const SPEED_PER_LEVEL := 0.25
 const RADAR_PER_LEVEL := 0.25
 # Free switches on the pads of other players' bases, in Upgrade pad order; one is active at a time.
 enum Special { SPREAD, LASER, JELLY, RADAR }
-const ENERGY_COST_LASER := 5.0
+const ENERGY_COST_LASER := 1.25
 const ENERGY_COST_SPREAD := ENERGY_COST_FIRE / 2.0
 
 static var _texture: ImageTexture
@@ -117,7 +119,7 @@ func max_energy() -> float:
 
 
 func max_shields() -> float:
-	return MAX_SHIELDS + levels[Upgrade.SHIELD]
+	return MAX_SHIELDS + SHIELDS_PER_LEVEL * levels[Upgrade.SHIELD]
 
 
 func speed_factor() -> float:
@@ -196,19 +198,19 @@ func muzzle_position(dir: Vector2 = facing) -> Vector2:
 	return p
 
 
-# Each full shield absorbs one hit; a hit with no full shield left destroys the tank. The own base is a safe zone.
+# A hit takes one shield, and any shield left absorbs it; a hit on an empty bar destroys the tank. The own base is a safe zone.
 func hit(attacker: Tank = null) -> void:
 	if home_rect.has_point(Vector2i(global_position.round())):
 		return
-	if shields >= 1.0:
-		shields -= 1.0
+	if shields > 0.0:
+		shields = maxf(0.0, shields - 1.0)
 		return
-	destroy()
-	if attacker:
+	destroy(attacker)
+	if attacker and attacker != self:
 		attacker.kills += 1
 
 
-func destroy() -> void:
+func destroy(attacker: Tank = null) -> void:
 	if is_dead:
 		return
 	is_dead = true
@@ -218,7 +220,7 @@ func destroy() -> void:
 	explosion.position = position
 	get_parent().add_child(explosion)
 	explosion.detonate(terrain)
-	destroyed.emit(self)
+	destroyed.emit(self, attacker)
 
 
 func respawn(pos: Vector2) -> void:

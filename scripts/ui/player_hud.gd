@@ -14,7 +14,7 @@ var player_id: int = 0
 var color: Color = Color.WHITE
 
 @onready var energy_bar: ProgressBar = $EnergyBar
-@onready var shield_segments: Array = $Shields.get_children()
+@onready var shield_bar: ProgressBar = $ShieldBar
 @onready var money_label: RichTextLabel = $MoneyLabel
 @onready var wins_label: Label = $WinsLabel
 @onready var banner: Label = $Banner
@@ -36,9 +36,8 @@ func setup(id: int, player_color: Color) -> void:
 func update_hud(tank: Tank) -> void:
 	energy_bar.max_value = tank.max_energy()
 	energy_bar.value = tank.energy
-	for i in shield_segments.size():
-		shield_segments[i].visible = i < tank.max_shields()
-		shield_segments[i].modulate.a = lerpf(0.15, 1.0, clampf(tank.shields - i, 0.0, 1.0))
+	shield_bar.max_value = tank.max_shields()
+	shield_bar.value = tank.shields
 	money_label.clear()
 	money_label.add_text("$ %d" % tank.money)
 	for i in tank.levels.size():

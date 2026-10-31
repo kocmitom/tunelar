@@ -4,6 +4,16 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-10-31
+
+### Added
+- A destroyed tank explodes into 12 shrapnel bullets flying out to all sides. Shrapnel dents dirt, stops at rock and takes a shield from every tank it hits; a kill by shrapnel counts for whoever destroyed the exploding tank, so chain explosions score too.
+
+### Changed
+- Shields are a bar instead of segments: it absorbs 5 hits by default and each shield level adds 2 more. Any shield left on the bar absorbs a hit; only a hit on an empty bar destroys the tank.
+- Tanks fire 3x faster: a shot every 0.083 s instead of every 0.25 s.
+- Shots cost a quarter of the energy: 2 for the cannon (was 8), 1.25 for the laser (was 5) and 1 for the 3-way cannon (was 4).
+
 ## [0.17.4] - 2026-10-31
 
 ### Changed

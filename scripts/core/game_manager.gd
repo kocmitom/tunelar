@@ -15,6 +15,8 @@ const PLAYER_COLORS: Array[Color] = [
 ]
 
 const KILLS_TO_WIN := 3
+# Bullets a destroyed tank bursts into, evenly around it.
+const SHRAPNEL_COUNT := 12
 
 const MAP_AREA_PER_PLAYER := 128000
 const MAP_ASPECT := 1.6
@@ -86,6 +88,7 @@ func setup(player_count: int, match_seed: int = randi(), local_slots: Array[int]
 		tank.terrain = terrain
 		tank.jelly = jelly
 		tank.fired.connect(_on_tank_fired)
+		tank.destroyed.connect(_on_tank_destroyed)
 		manager.world_root.add_child(tank)
 		tanks.append(tank)
 
@@ -207,5 +210,20 @@ func _on_tank_fired(tank: Tank) -> void:
 		# 3-way bullets never ricochet.
 		if tank.special == Tank.Special.SPREAD:
 			bullet.max_bounces = 0
+		bullets_root.add_child(bullet)
+		bullet.reset_physics_interpolation()
+
+
+# Shrapnel hits count for whoever destroyed the tank, so chain explosions credit them too.
+func _on_tank_destroyed(tank: Tank, attacker: Tank) -> void:
+	for i in SHRAPNEL_COUNT:
+		var bullet: Bullet = BulletScene.instantiate()
+		bullet.terrain = terrain
+		bullet.tanks = tanks
+		bullet.shooter = tank
+		bullet.attacker = attacker
+		bullet.max_bounces = 0
+		bullet.position = tank.position
+		bullet.velocity = Vector2.from_angle(TAU * i / SHRAPNEL_COUNT) * Bullet.BULLET_SPEED
 		bullets_root.add_child(bullet)
 		bullet.reset_physics_interpolation()

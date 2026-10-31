@@ -2,6 +2,9 @@
 
 [ext_resource type="Script" path="res://scripts/ui/player_hud.gd" id="1_hud"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_shield"]
+bg_color = Color(0.25, 0.5, 1, 1)
+
 [node name="PlayerHud" type="CanvasLayer"]
 script = ExtResource("1_hud")
 
@@ -14,49 +17,16 @@ mouse_filter = 2
 value = 100.0
 show_percentage = false
 
-[node name="Shields" type="HBoxContainer" parent="."]
+[node name="ShieldBar" type="ProgressBar" parent="."]
 offset_left = 8.0
 offset_top = 26.0
 offset_right = 168.0
 offset_bottom = 34.0
 mouse_filter = 2
-theme_override_constants/separation = 4
-
-[node name="Shield1" type="ColorRect" parent="Shields"]
-layout_mode = 2
-size_flags_horizontal = 3
-mouse_filter = 2
-color = Color(0.25, 0.5, 1, 1)
-
-[node name="Shield2" type="ColorRect" parent="Shields"]
-layout_mode = 2
-size_flags_horizontal = 3
-mouse_filter = 2
-color = Color(0.25, 0.5, 1, 1)
-
-[node name="Shield3" type="ColorRect" parent="Shields"]
-layout_mode = 2
-size_flags_horizontal = 3
-mouse_filter = 2
-color = Color(0.25, 0.5, 1, 1)
-
-[node name="Shield4" type="ColorRect" parent="Shields"]
-layout_mode = 2
-size_flags_horizontal = 3
-mouse_filter = 2
-color = Color(0.25, 0.5, 1, 1)
-
-[node name="Shield5" type="ColorRect" parent="Shields"]
-layout_mode = 2
-size_flags_horizontal = 3
-mouse_filter = 2
-color = Color(0.25, 0.5, 1, 1)
-
-[node name="Shield6" type="ColorRect" parent="Shields"]
-layout_mode = 2
-size_flags_horizontal = 3
-mouse_filter = 2
-color = Color(0.25, 0.5, 1, 1)
+theme_override_styles/fill = SubResource("StyleBoxFlat_shield")
+max_value = 5.0
+value = 5.0
+show_percentage = false
 
 [node name="MoneyLabel" type="RichTextLabel" parent="."]
 offset_left = 8.0

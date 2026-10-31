@@ -100,10 +100,8 @@ func test_hud_shows_shields() -> void:
 	gm.tanks[0].position.y = gm.tanks[0].home_rect.position.y - 5
 	gm.tanks[0].hit()
 	gm.step()
-	var lit := gm.huds[0].shield_segments.filter(func(s: ColorRect) -> bool: return s.modulate.a == 1.0)
-	check_eq(lit.size(), Tank.MAX_SHIELDS - 1, "one shield segment dims after a hit")
-	var shown := gm.huds[0].shield_segments.filter(func(s: ColorRect) -> bool: return s.visible)
-	check_eq(shown.size(), Tank.MAX_SHIELDS, "one segment shown per max shield")
+	check_eq(gm.huds[0].shield_bar.max_value, gm.tanks[0].max_shields(), "bar spans the max shields")
+	check_eq(gm.huds[0].shield_bar.value, Tank.MAX_SHIELDS - 1.0, "a hit takes one shield off the bar")
 	check(not gm.tanks[0].is_dead, "shield absorbed the hit")
 	gm.manager.free()
 
@@ -134,6 +132,27 @@ func test_round_end() -> void:
 	check(gm.manager.round_restart_button.visible, "lobby button shown")
 	check_eq(gm.manager.round_restart_button.text, "Lobby", "button returns to the lobby")
 	_press(gm, KEY_D, false)
+	gm.manager.free()
+
+
+func test_death_shrapnel() -> void:
+	var gm := _make_game(3)
+	var c := Vector2i(gm.terrain.width / 2, gm.terrain.height / 2)
+	for y in range(c.y - 8, c.y + 9):
+		for x in range(c.x - 8, c.x + 30):
+			gm.terrain.cells[y * gm.terrain.width + x] = TerrainData.AIR
+	var victim := gm.tanks[1]
+	var neighbor := gm.tanks[2]
+	victim.position = Vector2(c)
+	neighbor.position = Vector2(c) + Vector2(15, 0)
+	victim.shields = 0.0
+	neighbor.shields = 0.0
+	victim.hit(gm.tanks[0])
+	check_eq(gm.bullets_root.get_child_count(), GameManager.SHRAPNEL_COUNT, "the wreck bursts into shrapnel")
+	gm.step()
+	gm.step()
+	check(neighbor.is_dead or neighbor.global_position == Vector2(neighbor.home_rect.get_center()), "shrapnel destroys the neighbor")
+	check_eq(gm.tanks[0].kills, 2, "the shrapnel kill counts for the attacker")
 	gm.manager.free()
 
 
