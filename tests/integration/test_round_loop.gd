@@ -33,6 +33,14 @@ func test_map_grows_with_players() -> void:
 		ok = ok and size.x * size.y > previous
 		previous = size.x * size.y
 	check(ok, "every extra player enlarges the map")
+	previous = 0
+	ok = true
+	for s in GameManager.MAP_SIZE_NAMES.size():
+		var size := GameManager.map_size_for(4, s)
+		ok = ok and size.x * size.y > previous
+		previous = size.x * size.y
+	check(ok, "S < M < L < XL")
+	check_eq(GameManager.map_size_for(2, 1), GameManager.map_size_for(2), "M is the default")
 	var gm := _make_game(6)
 	check_eq(Vector2i(gm.terrain.width, gm.terrain.height), GameManager.map_size_for(6), "game uses the scaled size")
 	check_eq(gm.manager.cameras[0].limit_right, gm.terrain.width, "camera limits match the map")
@@ -63,7 +71,7 @@ func test_bases_drawn_in_player_color() -> void:
 			var rect := gm.terrain.base_rects[i]
 			var c := GameManager.PLAYER_COLORS[i]
 			ok = ok and _same_color(gm.renderer.image.get_pixel(rect.position.x, rect.position.y), c)
-			ok = ok and _same_color(gm.renderer.image.get_pixel(rect.position.x + 2, rect.position.y + 2), c.darkened(TerrainRenderer.BASE_FLOOR_DARKEN))
+			ok = ok and _same_color(gm.renderer.image.get_pixel(rect.get_center().x, rect.get_center().y), c.darkened(TerrainRenderer.BASE_FLOOR_DARKEN))
 		check(ok, "round %d: base walls and floor use the owner's color" % round_index)
 		gm.start_round(gm.terrain.map_seed + 1)
 	gm.manager.free()
@@ -80,10 +88,20 @@ func test_input_drives_fire() -> void:
 	gm.manager.free()
 
 
-func test_round_reset() -> void:
+func test_hud_shows_shields() -> void:
 	var gm := _make_game(2)
-	var first_seed := gm.terrain.map_seed
-	gm.tanks[0].energy = 40.0
+	gm.tanks[0].hit()
+	gm.step()
+	var lit := gm.huds[0].shield_segments.filter(func(s: ColorRect) -> bool: return s.modulate.a == 1.0)
+	check_eq(lit.size(), Tank.MAX_SHIELDS - 1, "one shield segment dims after a hit")
+	var shown := gm.huds[0].shield_segments.filter(func(s: ColorRect) -> bool: return s.visible)
+	check_eq(shown.size(), Tank.MAX_SHIELDS, "one segment shown per max shield")
+	check(not gm.tanks[0].is_dead, "shield absorbed the hit")
+	gm.manager.free()
+
+
+func test_round_end() -> void:
+	var gm := _make_game(2)
 	gm.tanks[1].destroy()
 	gm.step()
 	check(gm.round_over, "round ends with one tank left")
@@ -93,21 +111,13 @@ func test_round_reset() -> void:
 
 	var frozen_pos := gm.tanks[0].global_position
 	_press(gm, KEY_D, true)
-	_run(gm, 2.5)
-	check(gm.round_over, "still frozen before 3 s")
+	_run(gm, 5.0)
+	check(gm.round_over, "still frozen until back in the lobby")
 	check_eq(gm.tanks[0].global_position, frozen_pos, "movement frozen")
+	check(not gm.manager.fogs[0].visible and not gm.manager.fogs[1].visible, "map shown to every player")
+	check(gm.manager.round_restart_button.visible, "lobby button shown")
+	check_eq(gm.manager.round_restart_button.text, "Lobby", "button returns to the lobby")
 	_press(gm, KEY_D, false)
-
-	_run(gm, 0.6)
-	check(not gm.round_over, "new round after 3 s")
-	check(gm.terrain.map_seed != first_seed, "new terrain seed")
-	var ok := true
-	for i in 2:
-		ok = ok and not gm.tanks[i].is_dead and gm.tanks[i].energy == Tank.MAX_ENERGY and gm.tanks[i].visible
-		ok = ok and gm.tanks[i].global_position == Vector2(gm.terrain.base_rects[i].get_center())
-	check(ok, "tanks respawned in home bases with full energy")
-	check(not gm.huds[0].banner.visible, "banner hidden")
-	check_eq(gm.wins[0], 1, "wins persist across rounds")
 	gm.manager.free()
 
 

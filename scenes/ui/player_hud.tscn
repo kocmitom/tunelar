@@ -14,6 +14,59 @@ mouse_filter = 2
 value = 100.0
 show_percentage = false
 
+[node name="Shields" type="HBoxContainer" parent="."]
+offset_left = 8.0
+offset_top = 26.0
+offset_right = 168.0
+offset_bottom = 34.0
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="Shield1" type="ColorRect" parent="Shields"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+color = Color(0.25, 0.5, 1, 1)
+
+[node name="Shield2" type="ColorRect" parent="Shields"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+color = Color(0.25, 0.5, 1, 1)
+
+[node name="Shield3" type="ColorRect" parent="Shields"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+color = Color(0.25, 0.5, 1, 1)
+
+[node name="Shield4" type="ColorRect" parent="Shields"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+color = Color(0.25, 0.5, 1, 1)
+
+[node name="Shield5" type="ColorRect" parent="Shields"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+color = Color(0.25, 0.5, 1, 1)
+
+[node name="Shield6" type="ColorRect" parent="Shields"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+color = Color(0.25, 0.5, 1, 1)
+
+[node name="MoneyLabel" type="Label" parent="."]
+offset_left = 8.0
+offset_top = 36.0
+offset_right = 268.0
+offset_bottom = 59.0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+text = "$ 0  SH 0  EN 0  SP 0  RA 0"
+
 [node name="WinsLabel" type="Label" parent="."]
 anchors_preset = 1
 anchor_left = 1.0

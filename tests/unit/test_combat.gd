@@ -104,10 +104,28 @@ func test_fire_costs_energy() -> void:
 	tank.free()
 
 
+func test_shields_absorb_hits() -> void:
+	var terrain := _corridor()
+	var shooter := _spawn(terrain, Vector2(100, 100))
+	var target := _spawn(terrain, Vector2(130, 100))
+	var tanks: Array[Tank] = [shooter, target]
+	for i in int(Tank.MAX_SHIELDS):
+		var bullet := _bullet(terrain, shooter.global_position, Vector2(Bullet.BULLET_SPEED, 0), tanks, shooter)
+		_run(bullet, 0.5)
+		check(bullet.is_dead, "bullet %d consumed by the shield" % (i + 1))
+	check_eq(target.shields, 0, "every shield used up")
+	check(not target.is_dead, "target survives %d hits" % Tank.MAX_SHIELDS)
+	target.respawn(target.position)
+	check_eq(target.shields, Tank.MAX_SHIELDS, "respawn restores shields")
+	shooter.free()
+	target.free()
+
+
 func test_hit_destroys_tank_and_craters() -> void:
 	var terrain := _corridor()
 	var shooter := _spawn(terrain, Vector2(100, 100))
 	var target := _spawn(terrain, Vector2(130, 100))
+	target.shields = 0
 	var tanks: Array[Tank] = [shooter, target]
 	var bullet := _bullet(terrain, shooter.global_position, Vector2(Bullet.BULLET_SPEED, 0), tanks, shooter)
 	_run(bullet, 0.5)

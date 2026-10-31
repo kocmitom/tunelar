@@ -5,13 +5,14 @@ config_version=5
 [application]
 
 config/name="Tunneler"
-config/version="0.2.0"
-run/main_scene="res://scenes/ui/viewport_grid.tscn"
+config/version="0.11.0"
+run/main_scene="res://scenes/ui/lobby.tscn"
 config/features=PackedStringArray("4.7")
 
 [autoload]
 
 Updater="*res://scenes/ui/updater.tscn"
+Net="*res://scripts/core/net.gd"
 
 [display]
 

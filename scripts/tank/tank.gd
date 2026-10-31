@@ -18,6 +18,17 @@ const SPEED_FACTOR_EMPTY := 0.25
 const DIG_MARGIN := 1
 const ENERGY_COST_FIRE := 8.0
 const FIRE_COOLDOWN := 0.25
+const MAX_SHIELDS := 1.0
+# Refills an empty set in the same time the base refills an empty battery.
+const SHIELD_RECHARGE_BASE := MAX_SHIELDS * ENERGY_RECHARGE_BASE / MAX_ENERGY
+
+enum Upgrade { SHIELD, ENERGY, SPEED, RADAR }
+const MAX_LEVEL := 5
+# About the dirt cells one full base battery digs; level N costs N times this.
+const UPGRADE_COST := 3000
+const ENERGY_PER_LEVEL := 0.5
+const SPEED_PER_LEVEL := 0.25
+const RADAR_PER_LEVEL := 0.25
 
 static var _texture: ImageTexture
 
@@ -27,10 +38,16 @@ var player_id: int = 0
 var color: Color = Color.WHITE
 var terrain: TerrainData
 var energy: float = MAX_ENERGY
+var shields: float = MAX_SHIELDS
 var facing: Vector2 = Vector2.UP
 var home_rect: Rect2i
 var is_dead: bool = false
 var fire_cooldown: float = 0.0
+# Value of the dirt and gold dug this round.
+var money: int = 0
+var levels: Array[int] = [0, 0, 0, 0]
+# Home pad under the tank; a pad buys one level per visit.
+var _pad: int = -1
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var shape: CollisionShape2D = $CollisionShape2D
@@ -47,10 +64,42 @@ func tick(delta: float) -> void:
 	fire_cooldown = maxf(0.0, fire_cooldown - delta)
 	if is_dead:
 		return
+	var cell := Vector2i(global_position.round())
 	var recharge := ENERGY_REGEN_PASSIVE
-	if home_rect.has_point(Vector2i(global_position.round())):
+	if terrain.base_rects.any(func(rect: Rect2i) -> bool: return rect.has_point(cell)):
 		recharge += ENERGY_RECHARGE_BASE
-	energy = minf(MAX_ENERGY, energy + recharge * delta)
+		shields = minf(max_shields(), shields + SHIELD_RECHARGE_BASE * delta)
+	energy = minf(max_energy(), energy + recharge * delta)
+	var pad := TerrainData.pad_at(home_rect, cell)
+	if pad != _pad:
+		_pad = pad
+		if pad >= 0:
+			try_upgrade(pad)
+
+
+func try_upgrade(upgrade: int) -> bool:
+	var cost := (levels[upgrade] + 1) * UPGRADE_COST
+	if levels[upgrade] >= MAX_LEVEL or money < cost:
+		return false
+	money -= cost
+	levels[upgrade] += 1
+	return true
+
+
+func max_energy() -> float:
+	return MAX_ENERGY * (1.0 + ENERGY_PER_LEVEL * levels[Upgrade.ENERGY])
+
+
+func max_shields() -> float:
+	return MAX_SHIELDS + levels[Upgrade.SHIELD]
+
+
+func speed_factor() -> float:
+	return 1.0 + SPEED_PER_LEVEL * levels[Upgrade.SPEED]
+
+
+func reveal_radius() -> int:
+	return roundi(FogOfWar.reveal_radius(tank_radius) * (1.0 + RADAR_PER_LEVEL * levels[Upgrade.RADAR]))
 
 
 func step_movement(delta: float, input_dir: Vector2) -> void:
@@ -65,13 +114,15 @@ func step_movement(delta: float, input_dir: Vector2) -> void:
 	# The tunnel is DIG_MARGIN wider than the body; probe just outside it so solid earth always reads as DIRT.
 	var dig_radius := tank_radius + DIG_MARGIN
 	var probe := global_position + dir * (dig_radius + 2)
-	var digging := terrain.get_cell(roundi(probe.x), roundi(probe.y)) == TerrainData.DIRT
+	var probe_cell := terrain.get_cell(roundi(probe.x), roundi(probe.y))
+	var digging := probe_cell == TerrainData.DIRT or probe_cell == TerrainData.GOLD or probe_cell == TerrainData.ENERGY
 	var current_speed := SPEED_CLEAR
 	var drain := ENERGY_DRAIN_MOVE_CLEAR
 	if digging:
 		# Below LOW_ENERGY digging slows down, crawling at SPEED_FACTOR_EMPTY when the battery is flat.
 		current_speed = SPEED_DIGGING * lerpf(SPEED_FACTOR_EMPTY, 1.0, clampf(energy / LOW_ENERGY, 0.0, 1.0))
 		drain = ENERGY_DRAIN_DIGGING
+	current_speed *= speed_factor()
 
 	var target := global_position + dir * current_speed * delta
 	if not terrain.is_circle_passable(roundi(target.x), roundi(target.y), tank_radius):
@@ -80,7 +131,8 @@ func step_movement(delta: float, input_dir: Vector2) -> void:
 	energy = maxf(0.0, energy - drain * delta)
 	velocity = dir * current_speed
 	move_and_collide(velocity * delta)
-	terrain.dig_circle(roundi(global_position.x), roundi(global_position.y), dig_radius)
+	money += terrain.dig_circle(roundi(global_position.x), roundi(global_position.y), dig_radius)
+	energy = minf(max_energy(), energy + terrain.dug_energy * TerrainData.ENERGY_VALUE)
 
 
 func try_fire() -> bool:
@@ -94,6 +146,14 @@ func try_fire() -> bool:
 
 func muzzle_position() -> Vector2:
 	return global_position + facing * (tank_radius + 2)
+
+
+# Each full shield absorbs one hit; a hit with no full shield left destroys the tank.
+func hit() -> void:
+	if shields >= 1.0:
+		shields -= 1.0
+		return
+	destroy()
 
 
 func destroy() -> void:
@@ -118,7 +178,11 @@ func respawn(pos: Vector2) -> void:
 	facing = Vector2.UP
 	velocity = Vector2.ZERO
 	energy = MAX_ENERGY
+	shields = MAX_SHIELDS
 	fire_cooldown = 0.0
+	money = 0
+	levels = [0, 0, 0, 0]
+	_pad = -1
 	reset_physics_interpolation()
 
 

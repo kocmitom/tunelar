@@ -101,8 +101,9 @@ func test_bedrock_blocks() -> void:
 
 func test_base_recharge() -> void:
 	var terrain := TerrainData.new()
+	terrain.base_rects = [Rect2i(50, 90, 21, 21), Rect2i(200, 90, 21, 21)]
 	var tank := _spawn(terrain, Vector2(60, 100))
-	tank.home_rect = Rect2i(50, 90, 21, 21)
+	tank.home_rect = terrain.base_rects[0]
 	tank.energy = 10.0
 	for i in GameManager.TICK_RATE:
 		tank.tick(DT)
@@ -113,7 +114,133 @@ func test_base_recharge() -> void:
 	tank.energy = 10.0
 	tank.position = Vector2(150, 100)
 	tank.tick(1.0)
-	check_near(tank.energy, 10.0 + Tank.ENERGY_REGEN_PASSIVE, 0.001, "only slow passive regen outside home base")
+	check_near(tank.energy, 10.0 + Tank.ENERGY_REGEN_PASSIVE, 0.001, "only slow passive regen outside bases")
+	tank.energy = 10.0
+	tank.position = Vector2(210, 100)
+	tank.tick(1.0)
+	check_near(tank.energy, 10.0 + Tank.ENERGY_RECHARGE_BASE + Tank.ENERGY_REGEN_PASSIVE, 0.001, "recharges in another player's base")
+	tank.free()
+
+
+func test_base_recharges_shields() -> void:
+	var terrain := TerrainData.new()
+	terrain.base_rects = [Rect2i(50, 90, 21, 21)]
+	var tank := _spawn(terrain, Vector2(60, 100))
+	tank.home_rect = terrain.base_rects[0]
+	tank.shields = 0.0
+	tank.energy = 0.0
+	tank.hit()
+	check(tank.is_dead, "a hit with no full shield destroys")
+	tank.respawn(tank.position)
+	tank.shields = 0.0
+	tank.energy = 0.0
+	for i in 2 * GameManager.TICK_RATE:
+		tank.tick(DT)
+	check_near(tank.shields / Tank.MAX_SHIELDS, tank.energy / Tank.MAX_ENERGY, 0.02, "shields refill at the battery's pace")
+	for i in 3 * GameManager.TICK_RATE:
+		tank.tick(DT)
+	check_eq(tank.shields, Tank.MAX_SHIELDS, "shields capped at max")
+	tank.shields = 1.0
+	tank.position = Vector2(150, 100)
+	tank.tick(1.0)
+	check_eq(tank.shields, 1.0, "no shield recharge outside bases")
+	tank.free()
+
+
+func test_digging_earns_money() -> void:
+	var terrain := TerrainData.new(800, 200)
+	var tank := _spawn(terrain, Vector2(60, 100))
+	_drive(tank, Vector2.RIGHT, 1.0)
+	var dug := tank.money
+	check(dug > 0, "digging earns money")
+	_drive(tank, Vector2.LEFT, 0.3)
+	check_eq(tank.money, dug, "driving through a dug tunnel earns nothing")
+	tank.energy = Tank.MAX_ENERGY
+	tank.money = 0
+	_drive(tank, Vector2.RIGHT, 14.0)
+	check_eq(tank.energy, 0.0, "battery drained")
+	check_near(tank.money, Tank.UPGRADE_COST, Tank.UPGRADE_COST * 0.1, "one full battery of digging pays for a level 1 upgrade")
+	tank.free()
+
+
+func test_digging_energy_recharges() -> void:
+	var terrain := TerrainData.new()
+	for y in range(90, 111):
+		for x in range(70, 90):
+			terrain.cells[y * terrain.width + x] = TerrainData.ENERGY
+	var tank := _spawn(terrain, Vector2(60, 100))
+	tank.energy = 20.0
+	_drive(tank, Vector2.RIGHT, 1.0)
+	check(tank.energy > 20.0 + 10.0 * TerrainData.ENERGY_VALUE, "dug energy cells recharge the battery")
+	tank.energy = tank.max_energy() - 1.0
+	_drive(tank, Vector2.RIGHT, 0.5)
+	check(tank.energy <= tank.max_energy(), "energy capped at the battery size")
+	tank.free()
+
+
+# Drives off the pad (to the base center) and back onto it.
+func _visit(tank: Tank, pad: Vector2) -> void:
+	tank.position = Vector2(tank.home_rect.get_center())
+	tank.tick(DT)
+	tank.position = pad
+	tank.tick(DT)
+
+
+func test_home_pads_buy_upgrades() -> void:
+	var terrain := TerrainData.new()
+	var home := Rect2i(20, 20, TerrainData.BASE_SIZE, TerrainData.BASE_SIZE)
+	var other := Rect2i(150, 20, TerrainData.BASE_SIZE, TerrainData.BASE_SIZE)
+	terrain.base_rects = [home, other]
+	var tank := _spawn(terrain, Vector2(home.get_center()))
+	tank.home_rect = home
+	var pad := Vector2(TerrainData.pad_rects(home)[Tank.Upgrade.SHIELD].get_center())
+
+	tank.money = Tank.UPGRADE_COST - 1
+	_visit(tank, pad)
+	check_eq(tank.levels[Tank.Upgrade.SHIELD], 0, "level 1 not affordable")
+	tank.money = 3 * Tank.UPGRADE_COST
+	tank.tick(DT)
+	check_eq(tank.levels[Tank.Upgrade.SHIELD], 0, "staying on the pad buys nothing")
+	_visit(tank, pad)
+	check_eq(tank.levels[Tank.Upgrade.SHIELD], 1, "level 1 bought")
+	check_eq(tank.money, 2 * Tank.UPGRADE_COST, "level 1 costs one UPGRADE_COST")
+	tank.tick(DT)
+	check_eq(tank.levels[Tank.Upgrade.SHIELD], 1, "one level per visit")
+	_visit(tank, pad)
+	check_eq(tank.levels[Tank.Upgrade.SHIELD], 2, "level 2 bought")
+	check_eq(tank.money, 0, "level 2 costs two UPGRADE_COST")
+	check_eq(tank.max_shields(), Tank.MAX_SHIELDS + 2, "each shield level adds a shield")
+	check_eq(tank.levels, [2, 0, 0, 0] as Array[int], "only the shield pad upgraded")
+
+	tank.money = 100 * Tank.UPGRADE_COST
+	tank.position = Vector2(TerrainData.pad_rects(other)[Tank.Upgrade.SHIELD].get_center())
+	tank.tick(DT)
+	check_eq(tank.levels[Tank.Upgrade.SHIELD], 2, "pads in other bases do nothing")
+	for i in 10:
+		_visit(tank, pad)
+	check_eq(tank.levels[Tank.Upgrade.SHIELD], Tank.MAX_LEVEL, "levels cap at MAX_LEVEL")
+
+	tank.respawn(Vector2(home.get_center()))
+	check_eq(tank.money, 0, "respawn resets money")
+	check_eq(tank.levels, [0, 0, 0, 0] as Array[int], "respawn resets upgrades")
+	tank.free()
+
+
+func test_upgrade_effects() -> void:
+	var terrain := TerrainData.new()
+	for x in range(40, 200):
+		terrain.dig_circle(x, 100, 5)
+	var tank := _spawn(terrain, Vector2(60, 100))
+	tank.levels = [2, 2, 2, 2]
+	check_eq(tank.reveal_radius(), roundi(FogOfWar.reveal_radius(tank.tank_radius) * 1.5), "two radar levels see 50% farther")
+	_drive(tank, Vector2.RIGHT, 1.0)
+	check_near(tank.position.x, 60.0 + Tank.SPEED_CLEAR * 1.5, 1.0, "two speed levels drive 50% faster")
+	terrain.base_rects = [Rect2i(0, 0, terrain.width, terrain.height)]
+	tank.energy = 0.0
+	tank.shields = 0.0
+	tank.tick(20.0)
+	check_eq(tank.energy, Tank.MAX_ENERGY * 2.0, "two energy levels double the battery")
+	check_eq(tank.shields, Tank.MAX_SHIELDS + 2, "two shield levels add two shields")
 	tank.free()
 
 

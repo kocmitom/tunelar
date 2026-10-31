@@ -9,7 +9,6 @@ const HudScene := preload("res://scenes/ui/player_hud.tscn")
 
 const TICK_RATE := 30
 const TICK_DT := 1.0 / TICK_RATE
-const ROUND_FREEZE_TICKS := 3 * TICK_RATE
 const PLAYER_COLORS: Array[Color] = [
 	Color(0.3, 0.6, 1.0), Color(0.3, 1.0, 0.4), Color(1.0, 0.85, 0.2),
 	Color(1.0, 0.35, 0.9), Color(0.3, 1.0, 1.0), Color(1.0, 0.5, 0.2),
@@ -17,6 +16,9 @@ const PLAYER_COLORS: Array[Color] = [
 
 const MAP_AREA_PER_PLAYER := 128000
 const MAP_ASPECT := 1.6
+# Lobby map sizes; M is the default.
+const MAP_SIZE_NAMES := ["S", "M", "L", "XL"]
+const MAP_AREA_SCALES: Array[float] = [0.5, 1.0, 2.0, 3.0]
 
 var map_size: Vector2i
 var terrain: TerrainData
@@ -27,7 +29,8 @@ var huds: Array[PlayerHud] = []
 var wins: Array[int] = []
 var round_over: bool = false
 var tick: int = 0
-var round_resume_tick: int = 0
+# Seeded per match so every PC in a LAN match generates the same maps.
+var rng := RandomNumberGenerator.new()
 
 @onready var manager: ViewportManager = get_parent()
 @onready var router: InputRouter = get_parent().get_node("InputRouter")
@@ -35,20 +38,39 @@ var round_resume_tick: int = 0
 
 func _ready() -> void:
 	await manager.ready
-	setup(router.assign_devices(Input.get_connected_joypads()))
+	var player_count := router.assign_devices(Input.get_connected_joypads())
+	if Net.in_match:
+		setup(Net.slot_peers.size(), Net.match_seed, Net.local_slots, Net.map_size)
+	else:
+		setup(player_count)
 
 
+# In a LAN match a tick only runs once every PC's input for it has arrived (lockstep).
 func _physics_process(_delta: float) -> void:
-	step()
+	if not Net.in_match:
+		step()
+		return
+	if Net.sent_tick < tick + 1 + Net.INPUT_DELAY:
+		var local_inputs := router.sample_local(Net.local_slots.size())
+		Net.send_input(tick + 1 + Net.INPUT_DELAY, local_inputs)
+	var inputs := Net.take_inputs(tick + 1)
+	if not inputs.is_empty():
+		simulate(inputs)
 
 
-func setup(player_count: int) -> void:
-	map_size = map_size_for(player_count)
-	manager.build(player_count, map_size)
+# local_slots are the players shown on this PC (all of them when empty).
+func setup(player_count: int, match_seed: int = randi(), local_slots: Array[int] = [], size_index: int = 1) -> void:
+	if local_slots.is_empty():
+		local_slots = []
+		for i in player_count:
+			local_slots.append(i)
+	map_size = map_size_for(player_count, size_index)
+	manager.build(local_slots, map_size)
 	tanks.clear()
 	huds.clear()
 	wins.resize(player_count)
 	wins.fill(0)
+	rng.seed = match_seed
 
 	terrain = TerrainData.new(map_size.x, map_size.y)
 	renderer = TerrainRenderer.new()
@@ -64,22 +86,23 @@ func setup(player_count: int) -> void:
 		manager.world_root.add_child(tank)
 		tanks.append(tank)
 
+	for i in local_slots.size():
 		var hud: PlayerHud = HudScene.instantiate()
 		manager.viewports[i].add_child(hud)
-		hud.setup(i, PLAYER_COLORS[i])
+		hud.setup(local_slots[i], PLAYER_COLORS[local_slots[i]])
 		huds.append(hud)
 
 	bullets_root = Node2D.new()
 	bullets_root.name = "Bullets"
 	manager.world_root.add_child(bullets_root)
 	manager.tanks = tanks
-	start_round(randi())
+	start_round(rng.randi())
 	renderer.bind(terrain)
 
 
-# Map area grows linearly with the player count (640x400 for 2 players, ~1107x692 for 6).
-static func map_size_for(player_count: int) -> Vector2i:
-	var h := int(sqrt(MAP_AREA_PER_PLAYER * maxi(player_count, 2) / MAP_ASPECT))
+# Map area grows linearly with the player count (640x400 for 2 players, ~1107x692 for 6 on M).
+static func map_size_for(player_count: int, size_index: int = 1) -> Vector2i:
+	var h := int(sqrt(MAP_AREA_PER_PLAYER * MAP_AREA_SCALES[size_index] * maxi(player_count, 2) / MAP_ASPECT))
 	return Vector2i(int(h * MAP_ASPECT), h)
 
 
@@ -93,6 +116,8 @@ func start_round(new_seed: int) -> void:
 	for hud in huds:
 		hud.hide_banner()
 	round_over = false
+	manager.show_map(false)
+	manager.reset_fog(map_size)
 	manager.update_cameras()
 	for cam in manager.cameras:
 		cam.reset_physics_interpolation()
@@ -110,8 +135,7 @@ func step() -> void:
 func simulate(inputs: Array[Dictionary]) -> void:
 	tick += 1
 	if round_over:
-		if tick >= round_resume_tick:
-			start_round(randi())
+		manager.update_cameras(inputs, TICK_DT)
 		_update_huds()
 		return
 
@@ -129,7 +153,7 @@ func simulate(inputs: Array[Dictionary]) -> void:
 
 	_check_round_end()
 	_update_huds()
-	manager.update_cameras()
+	manager.update_cameras(inputs, TICK_DT)
 
 
 func _check_round_end() -> void:
@@ -137,7 +161,7 @@ func _check_round_end() -> void:
 	if alive.size() > 1:
 		return
 	round_over = true
-	round_resume_tick = tick + ROUND_FREEZE_TICKS
+	manager.show_map(true)
 	var text := "DRAW"
 	if alive.size() == 1:
 		var winner: Tank = alive[0]
@@ -148,8 +172,8 @@ func _check_round_end() -> void:
 
 
 func _update_huds() -> void:
-	for i in huds.size():
-		huds[i].update_hud(tanks[i], wins[i])
+	for hud in huds:
+		hud.update_hud(tanks[hud.player_id], wins[hud.player_id])
 
 
 func _on_tank_fired(tank: Tank) -> void:

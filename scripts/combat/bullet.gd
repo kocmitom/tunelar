@@ -1,6 +1,6 @@
 class_name Bullet
 extends Node2D
-## Grid-stepped projectile: dents dirt, ricochets off bedrock, destroys tanks.
+## Grid-stepped projectile: dents dirt, ricochets off bedrock, hits tanks.
 
 const BULLET_SPEED := 180.0
 const MAX_BOUNCES := 2
@@ -35,13 +35,13 @@ func step(delta: float) -> void:
 			velocity = velocity.bounce(_wall_normal(next))
 			continue
 		global_position = next
-		if cell == TerrainData.DIRT:
+		if cell == TerrainData.DIRT or cell == TerrainData.GOLD or cell == TerrainData.ENERGY:
 			terrain.dig_circle(roundi(next.x), roundi(next.y), DENT_RADIUS)
 			_die()
 			return
 		for tank in tanks:
 			if tank != shooter and not tank.is_dead and tank.global_position.distance_to(next) <= tank.tank_radius + 0.5:
-				tank.destroy()
+				tank.hit()
 				_die()
 				return
 

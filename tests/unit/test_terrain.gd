@@ -43,6 +43,25 @@ func test_dig_ignores_bedrock() -> void:
 	check_eq(t.get_cell(0, 0), TerrainData.BEDROCK, "border survives digging")
 
 
+func test_dig_gold_value() -> void:
+	var t := TerrainData.new()
+	for x in range(49, 52):
+		t.cells[50 * t.width + x] = TerrainData.GOLD
+	var dug := t.dig_circle(50, 50, 3)
+	check_eq(dug, 29 - 3 + 3 * TerrainData.GOLD_VALUE, "gold cells worth GOLD_VALUE each")
+	check_eq(t.get_cell(50, 50), TerrainData.AIR, "gold dug")
+
+
+func test_dig_energy_counted() -> void:
+	var t := TerrainData.new()
+	for x in range(49, 52):
+		t.cells[50 * t.width + x] = TerrainData.ENERGY
+	check_eq(t.dig_circle(50, 50, 3), 29, "energy cells worth 1 money like dirt")
+	check_eq(t.dug_energy, 3, "energy cells counted")
+	t.dig_circle(60, 50, 3)
+	check_eq(t.dug_energy, 0, "count resets every dig")
+
+
 func test_circle_passable() -> void:
 	var t := TerrainData.new()
 	check(t.is_circle_passable(50, 50, 3), "dirt circle passable")
@@ -101,6 +120,25 @@ func test_rocks_rare_and_clustered() -> void:
 						stack.append(n)
 			smallest = mini(smallest, size)
 		check(smallest >= 12, "seed %d has no rock specks (smallest formation %d cells)" % [map_seed, smallest])
+
+
+func test_gold_and_energy_scattered_outside_bases() -> void:
+	for cell in [TerrainData.GOLD, TerrainData.ENERGY]:
+		for map_seed in [1, 7, 42, 1234, 99999, 31337, 2026, 5]:
+			var t := TerrainData.new()
+			t.generate(map_seed, 6)
+			var found := 0
+			var in_base := 0
+			for y in t.height:
+				for x in t.width:
+					if t.get_cell(x, y) != cell:
+						continue
+					found += 1
+					for rect in t.base_rects:
+						in_base += 1 if rect.grow(4).has_point(Vector2i(x, y)) else 0
+			var coverage := float(found) / (t.width * t.height)
+			check(coverage > 0.0 and coverage < 0.02, "seed %d cell %d coverage %.3f" % [map_seed, cell, coverage])
+			check_eq(in_base, 0, "seed %d has no cell %d near bases" % [map_seed, cell])
 
 
 func test_renderer_tracks_digs() -> void:

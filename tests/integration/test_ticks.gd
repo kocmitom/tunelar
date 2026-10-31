@@ -41,19 +41,6 @@ func test_step_advances_one_fixed_tick() -> void:
 	gm.manager.free()
 
 
-func test_round_freeze_lasts_freeze_ticks() -> void:
-	var gm := _make_game(2)
-	gm.tanks[1].destroy()
-	gm.step()
-	check(gm.round_over, "round over")
-	var frozen := 0
-	while gm.round_over and frozen < 10 * GameManager.TICK_RATE:
-		gm.step()
-		frozen += 1
-	check_eq(frozen, GameManager.ROUND_FREEZE_TICKS, "freeze lasts exactly ROUND_FREEZE_TICKS")
-	gm.manager.free()
-
-
 func test_tap_between_ticks_fires_once() -> void:
 	var gm := _make_game(2)
 	var shots := [0]

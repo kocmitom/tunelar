@@ -104,6 +104,37 @@ func sample(player_id: int) -> Dictionary:
 	return input
 
 
+# One tick of input for this PC's single LAN player: every assigned device drives it.
+func sample_all() -> Dictionary:
+	var input := {"move": Vector2.ZERO, "fire": false}
+	for cfg in players:
+		var s := sample(cfg.player_id)
+		input["move"] += s["move"]
+		input["fire"] = input["fire"] or s["fire"]
+	input["move"] = input["move"].limit_length(1.0)
+	return input
+
+
+# Inputs of this PC's LAN players: a lone player uses every device, otherwise player k uses device k.
+func sample_local(count: int) -> Array[Dictionary]:
+	var inputs: Array[Dictionary] = []
+	if count == 1:
+		inputs.append(sample_all())
+		return inputs
+	for k in count:
+		inputs.append(sample(k))
+	return inputs
+
+
+# Controls of local player k in assign_devices order (fewer than 6 gamepads).
+static func device_label(k: int) -> String:
+	if k == 0:
+		return "WASD + Space"
+	if k == 1:
+		return "Arrows + Enter"
+	return "Gamepad %d" % (k - 1)
+
+
 func _action(player_id: int, action: String, joy_button: int, latched: bool = false) -> bool:
 	if player_id >= players.size():
 		return false

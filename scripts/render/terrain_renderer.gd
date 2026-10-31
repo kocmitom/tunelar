@@ -6,7 +6,59 @@ const COLOR_AIR := Color8(24, 14, 8)
 const COLOR_BASE := Color8(46, 36, 30)
 const DIRT_COLORS: Array[Color] = [Color8(166, 104, 42), Color8(148, 90, 34), Color8(184, 120, 52)]
 const BEDROCK_COLORS: Array[Color] = [Color8(112, 112, 124), Color8(96, 96, 108)]
+const GOLD_COLORS: Array[Color] = [Color8(255, 200, 40), Color8(230, 175, 20)]
+const ENERGY_COLORS: Array[Color] = [Color8(70, 170, 255), Color8(40, 140, 235)]
 const BASE_FLOOR_DARKEN := 0.75
+# Pad tint and icon color in Tank.Upgrade order.
+const PAD_COLORS: Array[Color] = [Color8(70, 120, 255), Color8(255, 210, 60), Color8(90, 230, 90), Color8(80, 230, 230)]
+const PAD_TINT := 0.25
+# PAD_SIZE x PAD_SIZE icons in Tank.Upgrade order; "#" is a lit pixel.
+const PAD_ICONS := [
+	[
+		".........",
+		".#######.",
+		".#.....#.",
+		".#.....#.",
+		".#.....#.",
+		"..#...#..",
+		"...#.#...",
+		"....#....",
+		".........",
+	],
+	[
+		".........",
+		"...###...",
+		".#######.",
+		".#.....#.",
+		".#.###.#.",
+		".#.....#.",
+		".#.###.#.",
+		".#######.",
+		".........",
+	],
+	[
+		".........",
+		"....#....",
+		"...#.#...",
+		"..#...#..",
+		"....#....",
+		"...#.#...",
+		"..#...#..",
+		".#.....#.",
+		".........",
+	],
+	[
+		".........",
+		"...###...",
+		"..#...#..",
+		".#.....#.",
+		".#..#..#.",
+		".#.....#.",
+		"..#...#..",
+		"...###...",
+		".........",
+	],
+]
 
 var terrain: TerrainData
 var image: Image
@@ -46,12 +98,26 @@ func _color_at(x: int, y: int) -> Color:
 	if cell == TerrainData.BEDROCK or cell == TerrainData.BASE_START:
 		var base_index := _base_owner(x, y)
 		if base_index >= 0:
-			return base_colors[base_index] if cell == TerrainData.BEDROCK else base_colors[base_index].darkened(BASE_FLOOR_DARKEN)
+			if cell == TerrainData.BEDROCK:
+				return base_colors[base_index]
+			var floor_color := base_colors[base_index].darkened(BASE_FLOOR_DARKEN)
+			var base := terrain.base_rects[base_index]
+			var pad := TerrainData.pad_at(base, Vector2i(x, y))
+			if pad < 0:
+				return floor_color
+			var local := Vector2i(x, y) - TerrainData.pad_rects(base)[pad].position
+			if PAD_ICONS[pad][local.y][local.x] == "#":
+				return PAD_COLORS[pad]
+			return floor_color.lerp(PAD_COLORS[pad], PAD_TINT)
 	match cell:
 		TerrainData.DIRT:
 			return DIRT_COLORS[noise % 3]
 		TerrainData.BEDROCK:
 			return BEDROCK_COLORS[noise % 2]
+		TerrainData.GOLD:
+			return GOLD_COLORS[noise % 2]
+		TerrainData.ENERGY:
+			return ENERGY_COLORS[noise % 2]
 		TerrainData.BASE_START:
 			return COLOR_BASE
 	return COLOR_AIR
