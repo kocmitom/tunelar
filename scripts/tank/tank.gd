@@ -102,7 +102,7 @@ func tick(delta: float) -> void:
 		if pad >= 0 and home:
 			try_upgrade(pad)
 		elif pad >= 0:
-			toggle_special(pad)
+			special = pad
 
 
 func _in_base() -> bool:
@@ -117,11 +117,6 @@ func try_upgrade(upgrade: int) -> bool:
 	money -= cost
 	levels[upgrade] += 1
 	return true
-
-
-# Selects the special, or switches it off when it is already active.
-func toggle_special(new_special: int) -> void:
-	special = -1 if special == new_special else new_special
 
 
 func max_energy() -> float:

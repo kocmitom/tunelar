@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.19.1] - 2026-10-31
+
+### Changed
+- Driving onto the pad of the special you already have in another player's base no longer switches it off; the last special picked stays active until another pad replaces it.
+
 ## [0.19.0] - 2026-10-31
 
 ### Added

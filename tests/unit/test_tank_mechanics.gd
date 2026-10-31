@@ -276,7 +276,7 @@ func test_enemy_pads_switch_specials() -> void:
 	tank.tick(DT)
 	check_eq(tank.special, Tank.Special.JELLY, "another pad replaces the special")
 	_visit(tank, Vector2(pads[Tank.Special.JELLY].get_center()))
-	check_eq(tank.special, -1, "the active pad switches it off")
+	check_eq(tank.special, Tank.Special.JELLY, "the active pad keeps it on")
 	_visit(tank, Vector2(pads[Tank.Special.RADAR].get_center()))
 
 	tank.money = 100 * Tank.UPGRADE_COST
