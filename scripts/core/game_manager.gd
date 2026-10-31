@@ -73,6 +73,7 @@ func setup(player_count: int, match_seed: int = randi(), local_slots: Array[int]
 	tanks.clear()
 	huds.clear()
 	rng.seed = match_seed
+	router.turret = turret
 
 	terrain = TerrainData.new(map_size.x, map_size.y)
 	renderer = TerrainRenderer.new()

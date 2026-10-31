@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.19.3] - 2026-10-31
+
+### Changed
+- Turret mode for a lone player on a PC: the arrows drive the tank and A/D turn the turret relative to the tank, so turning the tank turns the turret with it. W/S do nothing in turret mode; two keyboard players on one PC keep WASD + F/H and arrows + numpad 4/6.
+
 ## [0.19.2] - 2026-10-31
 
 ### Changed

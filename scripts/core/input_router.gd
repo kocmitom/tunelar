@@ -17,6 +17,8 @@ const KEYBOARD_BINDINGS := {
 const JOY_FIRE := JOY_BUTTON_A
 
 var players: Array[PlayerConfig] = []
+# Turret mode: a lone player aims with A/D and drives with the arrows.
+var turret := false
 var _keys := {}
 var _joy_axes := {}
 var _joy_turn := {}
@@ -124,7 +126,10 @@ func sample_all() -> Dictionary:
 	var input := {"move": Vector2.ZERO, "fire": false, "turn": 0.0}
 	for cfg in players:
 		var s := sample(cfg.player_id)
-		input["move"] += s["move"]
+		if turret and cfg.device_type == PlayerConfig.DeviceType.KEYBOARD_A:
+			input["turn"] += signf(s["move"].x)
+		else:
+			input["move"] += s["move"]
 		input["fire"] = input["fire"] or s["fire"]
 		input["turn"] += s["turn"]
 	input["move"] = input["move"].limit_length(1.0)
