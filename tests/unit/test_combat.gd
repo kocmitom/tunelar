@@ -101,6 +101,9 @@ func test_fire_costs_energy() -> void:
 	tank.tick(1.0)
 	check(not tank.try_fire(), "not enough energy")
 	check_eq(shots[0], 2, "fired signal per shot")
+	tank.energy = Tank.MAX_ENERGY
+	terrain.base_rects = [Rect2i(90, 90, 21, 21)]
+	check(not tank.try_fire(), "no firing inside a base")
 	tank.free()
 
 

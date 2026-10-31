@@ -241,6 +241,9 @@ func test_upgrade_effects() -> void:
 	tank.tick(20.0)
 	check_eq(tank.energy, Tank.MAX_ENERGY * 2.0, "two energy levels double the battery")
 	check_eq(tank.shields, Tank.MAX_SHIELDS + 2, "two shield levels add two shields")
+	tank.energy = 0.0
+	tank.tick(1.0)
+	check_near(tank.energy, 2.0 * Tank.ENERGY_RECHARGE_BASE + Tank.ENERGY_REGEN_PASSIVE, 0.001, "a bigger battery refills in the same time")
 	tank.free()
 
 

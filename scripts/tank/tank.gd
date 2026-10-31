@@ -66,8 +66,9 @@ func tick(delta: float) -> void:
 		return
 	var cell := Vector2i(global_position.round())
 	var recharge := ENERGY_REGEN_PASSIVE
-	if terrain.base_rects.any(func(rect: Rect2i) -> bool: return rect.has_point(cell)):
-		recharge += ENERGY_RECHARGE_BASE
+	if _in_base():
+		# Scaled by battery size so any battery refills in the same time.
+		recharge += ENERGY_RECHARGE_BASE * max_energy() / MAX_ENERGY
 		shields = minf(max_shields(), shields + SHIELD_RECHARGE_BASE * delta)
 	energy = minf(max_energy(), energy + recharge * delta)
 	var pad := TerrainData.pad_at(home_rect, cell)
@@ -75,6 +76,11 @@ func tick(delta: float) -> void:
 		_pad = pad
 		if pad >= 0:
 			try_upgrade(pad)
+
+
+func _in_base() -> bool:
+	var cell := Vector2i(global_position.round())
+	return terrain.base_rects.any(func(rect: Rect2i) -> bool: return rect.has_point(cell))
 
 
 func try_upgrade(upgrade: int) -> bool:
@@ -136,7 +142,7 @@ func step_movement(delta: float, input_dir: Vector2) -> void:
 
 
 func try_fire() -> bool:
-	if is_dead or energy < ENERGY_COST_FIRE or fire_cooldown > 0.0:
+	if is_dead or energy < ENERGY_COST_FIRE or fire_cooldown > 0.0 or _in_base():
 		return false
 	energy -= ENERGY_COST_FIRE
 	fire_cooldown = FIRE_COOLDOWN

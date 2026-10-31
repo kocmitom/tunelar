@@ -96,8 +96,8 @@ func setup(player_count: int, match_seed: int = randi(), local_slots: Array[int]
 	bullets_root.name = "Bullets"
 	manager.world_root.add_child(bullets_root)
 	manager.tanks = tanks
-	start_round(rng.randi())
 	renderer.bind(terrain)
+	start_round(rng.randi())
 
 
 # Map area grows linearly with the player count (640x400 for 2 players, ~1107x692 for 6 on M).
@@ -117,7 +117,7 @@ func start_round(new_seed: int) -> void:
 		hud.hide_banner()
 	round_over = false
 	manager.show_map(false)
-	manager.reset_fog(map_size)
+	manager.reset_fog(renderer.image)
 	manager.update_cameras()
 	for cam in manager.cameras:
 		cam.reset_physics_interpolation()

@@ -43,6 +43,8 @@ func test_step_advances_one_fixed_tick() -> void:
 
 func test_tap_between_ticks_fires_once() -> void:
 	var gm := _make_game(2)
+	# Bases block firing.
+	gm.tanks[0].position.y = gm.tanks[0].home_rect.position.y - 5
 	var shots := [0]
 	gm.tanks[0].fired.connect(func(_t: Tank) -> void: shots[0] += 1)
 	_press(gm, KEY_SPACE, true)
@@ -57,6 +59,7 @@ func test_tap_between_ticks_fires_once() -> void:
 
 func test_simulate_with_synthetic_inputs() -> void:
 	var gm := _make_game(2)
+	gm.tanks[0].position.y = gm.tanks[0].home_rect.position.y - 5
 	var x0 := gm.tanks[0].position.x
 	var p1 := gm.tanks[1].position
 	var idle := {"move": Vector2.ZERO, "fire": false}

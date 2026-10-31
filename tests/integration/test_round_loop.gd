@@ -79,6 +79,8 @@ func test_bases_drawn_in_player_color() -> void:
 
 func test_input_drives_fire() -> void:
 	var gm := _make_game(2)
+	# Bases block firing.
+	gm.tanks[0].position.y = gm.tanks[0].home_rect.position.y - 5
 	_press(gm, KEY_SPACE, true)
 	gm.step()
 	_press(gm, KEY_SPACE, false)

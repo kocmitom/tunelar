@@ -83,10 +83,10 @@ func build(local_slots: Array[int], map_size: Vector2i) -> void:
 		fogs.append(fog)
 
 
-func reset_fog(map_size: Vector2i) -> void:
+func reset_fog(terrain: Image) -> void:
 	for i in fogs.size():
 		var tank := tanks[slots[i]]
-		fogs[i].reset(map_size)
+		fogs[i].reset(terrain)
 		fogs[i].visible = true
 		fogs[i].reveal(tank.global_position, FogOfWar.SPAWN_REVEAL_SCALE * tank.reveal_radius())
 

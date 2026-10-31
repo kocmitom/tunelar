@@ -4,6 +4,18 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.12.1] - 2026-10-31
+
+### Changed
+- Energy nuggets are smaller, the same size as gold nuggets.
+- A base refills an empty battery in the same time whatever its size, so energy upgrades no longer slow down recharging.
+- Tanks can no longer shoot from inside a base.
+
+## [0.12.0] - 2026-10-31
+
+### Changed
+- Fog of war works like Age of Empires 2: explored areas outside your view show the map as you last saw it, dimmed, but hide tanks and bullets. Only the circle around your tank shows enemies and fresh digging live.
+
 ## [0.11.0] - 2026-10-31
 
 ### Added

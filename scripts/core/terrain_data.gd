@@ -27,7 +27,7 @@ const GOLD_RADIUS_MAX := 4.0
 const GOLD_VALUE := 10
 const ENERGY_COVERAGE := 0.01
 const ENERGY_RADIUS_MIN := 2.0
-const ENERGY_RADIUS_MAX := 6.0
+const ENERGY_RADIUS_MAX := 4.0
 # Battery recharged per dug energy cell, so bigger blobs give more.
 const ENERGY_VALUE := 1.0
 # Slot order spreads the first bases far apart on the 3x2 region grid.
