@@ -1,18 +1,17 @@
 extends Node
-## Sound effects in the 1991 PC speaker style or a modern synthesized one, all rendered in code at startup.
+## Synthesized sound effects, all rendered in code at startup.
 ## Output only: it never touches the simulation, so lockstep stays in sync.
 
-enum Style { OFF, ORIGINAL, MODERN }
+enum Style { OFF, ON }
 enum Kind { FIRE, LASER, DIG, IMPACT, RICOCHET, HIT, DESTROY, BUMP, PICKUP }
 enum Filter { LOW, HIGH, BAND }
 
 const RATE := 22050
-# One slot of the original's speaker queue, 3 per 18.2 Hz BIOS tick.
-const SLOT := 65536.0 / 1193182.0 / 3.0
 const VARIANTS := 3
 const VOICES := 16
-const SQUARE_LEVEL := 0.08
 const SYNTH_LEVEL := 0.5
+# Scales every synthesized frequency.
+const PITCH := 0.75
 const PITCH_SPREAD := 0.06
 # Full volume within NEAR px of the nearest listener, silent beyond FAR.
 const NEAR := 60.0
@@ -30,11 +29,11 @@ const LENGTHS := {
 	Kind.HIT: 0.66, Kind.DESTROY: 2.33, Kind.BUMP: 0.11, Kind.PICKUP: 0.18,
 }
 
-var style: int = Style.MODERN
+var style: int = Style.ON
 # The local tanks; with none every sound plays at full volume.
 var listeners: Array[Tank] = []
-# Streams per style, then per kind, one per variant.
-var banks := {}
+# Streams per kind, one per variant.
+var banks := []
 var _players: Array[AudioStreamPlayer] = []
 var _kinds := {}
 var _next := {}
@@ -47,15 +46,11 @@ func _ready() -> void:
 		var player := AudioStreamPlayer.new()
 		add_child(player)
 		_players.append(player)
-	for s in [Style.ORIGINAL, Style.MODERN]:
-		var bank := []
-		for kind in Kind.values():
-			var streams: Array[AudioStreamWAV] = []
-			var count := VARIANTS if s == Style.MODERN or kind == Kind.HIT or kind == Kind.DESTROY else 1
-			for i in count:
-				streams.append(_render_square(kind) if s == Style.ORIGINAL else _render_synth(kind))
-			bank.append(streams)
-		banks[s] = bank
+	for kind in Kind.values():
+		var streams: Array[AudioStreamWAV] = []
+		for i in VARIANTS:
+			streams.append(_render_synth(kind))
+		banks.append(streams)
 
 
 # pos is the world position of the source; null plays at full volume.
@@ -66,8 +61,7 @@ func play(kind: Kind, pos: Variant = null) -> AudioStreamPlayer:
 	if volume <= 0.0:
 		return null
 	var now := Time.get_ticks_msec() / 1000.0
-	# The original clicks on every dug frame.
-	if GAPS.has(kind) and not (kind == Kind.DIG and style == Style.ORIGINAL):
+	if GAPS.has(kind):
 		if now < _next.get(kind, 0.0):
 			return null
 		var gap: Vector2 = GAPS[kind]
@@ -83,10 +77,10 @@ func play(kind: Kind, pos: Variant = null) -> AudioStreamPlayer:
 	_players.erase(player)
 	_players.append(player)
 	_kinds[player] = kind
-	var streams: Array = banks[style][kind]
+	var streams: Array = banks[kind]
 	player.stream = streams[_rng.randi() % streams.size()]
 	player.volume_db = linear_to_db(volume)
-	player.pitch_scale = 1.0 + _rng.randf_range(-PITCH_SPREAD, PITCH_SPREAD) if style == Style.MODERN else 1.0
+	player.pitch_scale = 1.0 + _rng.randf_range(-PITCH_SPREAD, PITCH_SPREAD)
 	player.play()
 	return player
 
@@ -100,68 +94,6 @@ func volume_at(pos: Vector2) -> float:
 		return 1.0
 	var f := clampf((FAR - nearest) / (FAR - NEAR), 0.0, 1.0)
 	return f * f
-
-
-# The original's QueueSound: frequencies of the speaker queue slots after the current one, 0 is silence.
-# LASER, RICOCHET and PICKUP are new, in the same style.
-func _queue(kind: Kind) -> PackedInt32Array:
-	var q := PackedInt32Array()
-	q.resize(256)
-	q.fill(0)
-	match kind:
-		Kind.FIRE:
-			q[1] = 5000
-		Kind.DIG:
-			q[1] = 40
-		Kind.IMPACT:
-			for i in range(1, 5):
-				q[i * 2] = i * 20 + 50
-		Kind.BUMP:
-			for i in range(1, 4):
-				q[i * 2] = 40
-				q[i * 2 + 1] = 45
-		Kind.HIT, Kind.DESTROY:
-			var destroy := kind == Kind.DESTROY
-			for i in (40 if destroy else 4):
-				var f := 0x100
-				var step := _rng.randi_range(0, 0x3FF if destroy else 0x34F)
-				for j in range(1, 23 if destroy else 8):
-					q[f >> 8] = (step >> 7) * j + 40 if destroy else j * 15 + 40
-					f += step
-			q[1] = 1000
-		Kind.LASER:
-			q[1] = 3000
-			q[2] = 2000
-			q[3] = 1200
-		Kind.RICOCHET:
-			q[1] = 1500
-			q[2] = 2500
-		Kind.PICKUP:
-			q[1] = 600
-			q[2] = 800
-			q[3] = 1200
-	return q
-
-
-# One square wave whose frequency changes every slot, like the PC speaker.
-func _render_square(kind: Kind) -> AudioStreamWAV:
-	var q := _queue(kind)
-	var last := 255
-	while q[last] == 0:
-		last -= 1
-	var per_slot := int(SLOT * RATE)
-	_buf = PackedFloat32Array()
-	_buf.resize(last * per_slot)
-	_buf.fill(0.0)
-	var phase := 0.0
-	for slot in range(1, last + 1):
-		var hz := q[slot]
-		if hz == 0:
-			continue
-		for i in per_slot:
-			_buf[(slot - 1) * per_slot + i] = 1.0 if phase < 0.5 else -1.0
-			phase = fmod(phase + float(hz) / RATE, 1.0)
-	return _wav(SQUARE_LEVEL)
 
 
 # Layers after the realistic style of kaniansky/tunneler (speaker.js); times in seconds.
@@ -215,7 +147,7 @@ func _tone(t: float, peak: float, a: float, d: float, f0: float, f1: float, squa
 	var length := rise + int(d * RATE)
 	var fall := pow(0.0001, 1.0 / maxf(1.0, d * RATE))
 	var glide := pow(f1 / f0, 1.0 / length)
-	var f := f0
+	var f := f0 * PITCH
 	var phase := 0.0
 	var gain := peak
 	for i in mini(length, _buf.size() - start):
@@ -240,7 +172,7 @@ func _noise(t: float, peak: float, a: float, d: float, filter: Filter, f0: float
 	var length := rise + int(d * RATE)
 	var fall := pow(0.0001, 1.0 / maxf(1.0, d * RATE))
 	var glide := pow(f1 / f0, 1.0 / length)
-	var f := f0
+	var f := f0 * PITCH
 	var gain := peak
 	var low := 0.0
 	var low2 := 0.0

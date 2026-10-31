@@ -1,6 +1,19 @@
 extends Control
 ## Main menu: lists the players in the LAN lobby; each PC can add local players and anyone can start the match.
 
+# Music note on the sound On button; "#" is a lit pixel.
+const NOTE_ICON := [
+	".........",
+	"....##...",
+	"....#.#..",
+	"....#..#.",
+	"....#....",
+	"..###....",
+	".####....",
+	"..##.....",
+	".........",
+]
+
 @onready var status_label: Label = %Status
 @onready var player_list: VBoxContainer = %Players
 @onready var add_button: Button = %AddButton
@@ -21,6 +34,7 @@ func _ready() -> void:
 	Input.joy_connection_changed.connect(func(_device: int, _connected: bool) -> void: _refresh())
 	for i in map_buttons.size():
 		map_buttons[i].pressed.connect(Net.set_map_size.bind(i))
+	sound_buttons[Sfx.Style.ON].icon = PlayerHud._build_icon(NOTE_ICON)
 	for i in sound_buttons.size():
 		sound_buttons[i].set_pressed_no_signal(i == Sfx.style)
 		sound_buttons[i].pressed.connect(_on_sound_button_pressed.bind(i))

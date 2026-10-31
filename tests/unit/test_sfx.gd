@@ -4,12 +4,11 @@ const TankScene := preload("res://scenes/tank/tank.tscn")
 
 
 func test_every_kind_rendered() -> void:
-	for style in [Sfx.Style.ORIGINAL, Sfx.Style.MODERN]:
-		for kind in Sfx.Kind.values():
-			var streams: Array = Sfx.banks[style][kind]
-			check(not streams.is_empty(), "style %d kind %d has streams" % [style, kind])
-			for stream in streams:
-				check(stream.data.size() > 0, "style %d kind %d stream has samples" % [style, kind])
+	for kind in Sfx.Kind.values():
+		var streams: Array = Sfx.banks[kind]
+		check(not streams.is_empty(), "kind %d has streams" % kind)
+		for stream in streams:
+			check(stream.data.size() > 0, "kind %d stream has samples" % kind)
 
 
 func test_volume_by_distance() -> void:
@@ -35,6 +34,6 @@ func test_off_plays_nothing() -> void:
 	var style: int = Sfx.style
 	Sfx.style = Sfx.Style.OFF
 	check(Sfx.play(Sfx.Kind.FIRE) == null, "off plays nothing")
-	Sfx.style = Sfx.Style.ORIGINAL
-	check(Sfx.play(Sfx.Kind.FIRE) != null, "original plays")
+	Sfx.style = Sfx.Style.ON
+	check(Sfx.play(Sfx.Kind.FIRE) != null, "on plays")
 	Sfx.style = style

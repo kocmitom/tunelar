@@ -4,6 +4,12 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.22.1] - 2026-10-31
+
+### Changed
+- The 1991 PC speaker sound style is gone: the lobby Sound row is just Off and On, and On shows a music note.
+- Every sound is a quarter lower in pitch (about 5 semitones), with the same length.
+
 ## [0.22.0] - 2026-10-31
 
 ### Added
