@@ -136,7 +136,7 @@ func test_digging_sets_off_blow() -> void:
 	check(digger.is_dead, "the digger dies in its blow")
 	check_eq(gm.terrain.get_cell(c.x + 25, c.y), TerrainData.AIR, "digging set off the blow")
 	check(gm.tanks[1].is_dead, "a nearby tank is destroyed")
-	check_eq(digger.kills, 1, "the digger gets the kill")
+	check_eq(digger.kills, 0, "a digger dying in its own blow gets no kill")
 	gm.manager.free()
 
 

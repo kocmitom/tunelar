@@ -1,7 +1,7 @@
 class_name SpiceBlow
 extends Node2D
 ## Spice blow: clears all sand within RADIUS of a spice pocket and destroys the tanks there; every pocket it reaches blows too.
-## The whole chain counts as one blow, so its kills go to whoever set it off. Then it plays a short expanding ring per center.
+## The whole chain counts as one blow, so its kills go to whoever set it off, if they survive it. Then it plays a short expanding ring per center.
 
 # Three quarters of the sight radius of a level 1 radar.
 static var RADIUS := 40
@@ -28,13 +28,17 @@ func detonate(terrain: TerrainData, tanks: Array[Tank], cell: Vector2i, attacker
 		centers.append(Vector2(c - cell))
 	Sfx.play(Sfx.Kind.DESTROY, position)
 	# Own bases stay safe, as from bullets.
+	var victims := 0
 	for tank in tanks:
 		if tank.is_dead or tank.home_rect.has_point(Vector2i(tank.global_position.round())):
 			continue
 		if queue.any(func(c: Vector2i) -> bool: return tank.global_position.distance_to(Vector2(c)) <= RADIUS):
 			tank.destroy(attacker)
-			if attacker and attacker != tank:
-				attacker.kills += 1
+			if tank != attacker:
+				victims += 1
+	# An attacker caught in its own blow gets no kills.
+	if attacker and not attacker.is_dead:
+		attacker.kills += victims
 
 
 func _process(delta: float) -> void:

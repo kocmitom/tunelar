@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.26.2] - 2026-10-31
+
+### Changed
+- A spice blow's kills count only if the player who set it off survives it; when the blow also destroys that player, nobody gets the kills.
+
 ## [0.26.1] - 2026-10-31
 
 ### Fixed
