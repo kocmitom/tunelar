@@ -4,6 +4,14 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.26.1] - 2026-10-31
+
+### Fixed
+- A spice pocket now always blows when even a single grain is shot away: a bullet or shrapnel dent that reaches the pocket sets it off, not only a shot landing right on a spice cell.
+
+### Changed
+- The spice blow radius is 40 px instead of 54, about a quarter smaller.
+
 ## [0.26.0] - 2026-10-31
 
 ### Added

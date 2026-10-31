@@ -51,9 +51,10 @@ func step(delta: float) -> void:
 				_die()
 				return
 		if TerrainData.is_diggable(cell):
-			if cell == TerrainData.SPICE:
-				terrain.spice_hit.emit(Vector2i(next.round()), attacker if attacker else shooter)
 			terrain.dig_circle(roundi(next.x), roundi(next.y), DENT_RADIUS)
+			# Any spice grain in the dent sets the pocket off.
+			if terrain.dug_spice > 0:
+				terrain.spice_hit.emit(Vector2i(next.round()), attacker if attacker else shooter)
 			Sfx.play(Sfx.Kind.IMPACT, next)
 			_die()
 			return

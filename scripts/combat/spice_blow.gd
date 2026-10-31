@@ -3,8 +3,8 @@ extends Node2D
 ## Spice blow: clears all sand within RADIUS of a spice pocket and destroys the tanks there; every pocket it reaches blows too.
 ## The whole chain counts as one blow, so its kills go to whoever set it off. Then it plays a short expanding ring per center.
 
-# The sight radius of a level 1 radar.
-static var RADIUS := 54
+# Three quarters of the sight radius of a level 1 radar.
+static var RADIUS := 40
 static var POCKET_RADIUS := 2
 static var DURATION := 0.6
 const COLOR := Color(1.0, 0.55, 0.15)
