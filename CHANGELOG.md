@@ -4,6 +4,12 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.16.1] - 2026-10-31
+
+### Changed
+- The radar sonar turns yellow while it flares up on another player.
+- A 5-way cannon volley takes at most one shield (or the kill) from each tank: when several of its bullets hit the same tank, only one counts. The next volley can take the next shield.
+
 ## [0.16.0] - 2026-10-31
 
 ### Added

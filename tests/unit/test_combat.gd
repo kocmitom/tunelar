@@ -184,6 +184,26 @@ func test_shields_absorb_hits() -> void:
 	target.free()
 
 
+func test_volley_hits_once() -> void:
+	var terrain := _corridor()
+	var shooter := _spawn(terrain, Vector2(100, 100))
+	var target := _spawn(terrain, Vector2(130, 100))
+	target.shields = 2.0
+	var tanks: Array[Tank] = [shooter, target]
+	var volley: Array[Tank] = []
+	for i in 2:
+		var bullet := _bullet(terrain, shooter.global_position, Vector2(Bullet.BULLET_SPEED, 0), tanks, shooter)
+		bullet.volley = volley
+		_run(bullet, 0.5)
+		check(bullet.is_dead, "volley bullet %d stopped by the target" % (i + 1))
+	check_eq(target.shields, 1.0, "one volley takes one shield")
+	var next := _bullet(terrain, shooter.global_position, Vector2(Bullet.BULLET_SPEED, 0), tanks, shooter)
+	_run(next, 0.5)
+	check_eq(target.shields, 0.0, "the next shot takes another shield")
+	shooter.free()
+	target.free()
+
+
 func test_hit_destroys_tank_and_craters() -> void:
 	var terrain := _corridor()
 	var shooter := _spawn(terrain, Vector2(100, 100))

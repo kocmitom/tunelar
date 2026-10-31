@@ -192,11 +192,13 @@ func _on_tank_fired(tank: Tank) -> void:
 		laser.reset_physics_interpolation()
 		laser.fire(tank.facing)
 		return
+	var volley: Array[Tank] = []
 	for dir in tank.fire_directions():
 		var bullet: Bullet = BulletScene.instantiate()
 		bullet.terrain = terrain
 		bullet.tanks = tanks
 		bullet.shooter = tank
+		bullet.volley = volley
 		bullet.position = tank.muzzle_position(dir)
 		bullet.velocity = dir * Bullet.BULLET_SPEED
 		# 5-way bullets never ricochet.

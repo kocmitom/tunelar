@@ -13,6 +13,8 @@ var shooter: Tank
 var velocity: Vector2 = Vector2.ZERO
 var bounces: int = 0
 var max_bounces: int = MAX_BOUNCES
+# Tanks already hit by this bullet's volley, shared by all its bullets; each takes one hit per volley.
+var volley: Array[Tank] = []
 var is_dead: bool = false
 
 
@@ -42,7 +44,9 @@ func step(delta: float) -> void:
 			return
 		for tank in tanks:
 			if tank != shooter and not tank.is_dead and tank.global_position.distance_to(next) <= tank.tank_radius + 0.5:
-				tank.hit(shooter)
+				if tank not in volley:
+					volley.append(tank)
+					tank.hit(shooter)
 				_die()
 				return
 
