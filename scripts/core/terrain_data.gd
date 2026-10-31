@@ -13,8 +13,8 @@ const ENERGY := 5
 const DRAIN := 6
 
 const BORDER := 2
-const BASE_SIZE := 31
-const BASE_DOOR := 9
+const BASE_SIZE := 33
+const BASE_DOOR := 11
 const PAD_SIZE := 9
 const ROCK_COVERAGE := 0.05
 const ROCK_RADIUS_MIN := 5.0

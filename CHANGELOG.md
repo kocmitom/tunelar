@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.16.4] - 2026-10-31
+
+### Changed
+- Houses are easier to get into: they are 33 px instead of 31, and the doors are 11 px wide instead of 9.
+
 ## [0.16.3] - 2026-10-31
 
 ### Changed
