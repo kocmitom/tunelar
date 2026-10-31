@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.13.1] - 2026-10-31
+
+### Changed
+- You see 3 times farther than you explore: in areas you have already explored, enemy tanks, bullets and fresh digging show live up to 3 times the explore radius. Unexplored dirt stays dark, and new terrain is still only explored close to your tank.
+
 ## [0.13.0] - 2026-10-31
 
 ### Added
