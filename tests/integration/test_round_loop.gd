@@ -95,6 +95,25 @@ func test_input_drives_fire() -> void:
 	gm.manager.free()
 
 
+func test_turret_mode() -> void:
+	var manager: ViewportManager = GridScene.instantiate()
+	tree.root.add_child(manager)
+	var gm: GameManager = manager.get_node("GameManager")
+	gm.router.assign_devices([] as Array[int])
+	gm.setup(2, 1234, [], 1, true)
+	check(gm.tanks.all(func(t: Tank) -> bool: return t.turret), "every tank has a turret")
+	gm.tanks[0].position.y = gm.tanks[0].home_rect.position.y - 5
+	_press(gm, KEY_H, true)
+	_run(gm, 0.5)
+	_press(gm, KEY_H, false)
+	check(gm.tanks[0].facing.is_equal_approx(Vector2.RIGHT), "H turns P1's turret clockwise")
+	check_eq(gm.tanks[1].facing, Vector2.UP, "P2's turret untouched")
+	gm.tanks[0].try_fire()
+	var bullet: Bullet = gm.bullets_root.get_child(0)
+	check(bullet.velocity.normalized().is_equal_approx(Vector2.RIGHT), "the bullet flies along the turret")
+	gm.manager.free()
+
+
 func test_hud_shows_shields() -> void:
 	var gm := _make_game(2)
 	gm.tanks[0].position.y = gm.tanks[0].home_rect.position.y - 5

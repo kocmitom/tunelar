@@ -127,6 +127,16 @@ toggle_mode = true
 button_group = SubResource("ButtonGroup_map")
 text = "XL"
 
+[node name="TurretButton" type="Button" parent="Center/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(180, 44)
+layout_mode = 2
+size_flags_horizontal = 4
+focus_mode = 0
+theme_override_font_sizes/font_size = 20
+toggle_mode = true
+text = "Turret"
+
 [node name="StartButton" type="Button" parent="Center/Column"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(260, 60)

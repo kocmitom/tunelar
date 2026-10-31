@@ -13,3 +13,5 @@ script = ExtResource("1_tank")
 shape = SubResource("CircleShape2D_tank")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
+
+[node name="Barrel" type="Sprite2D" parent="."]

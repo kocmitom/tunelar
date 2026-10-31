@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-10-31
+
+### Added
+- Turret mode, a lobby toggle for the whole match: the barrel keeps its direction while the tank drives and turns on its own at half a turn per second, so you can drive one way and shoot another. Shots, the 3-way cannon and the laser fire along the barrel. A lone player on a PC drives with WASD and turns the turret with the left/right arrows; with two keyboard players on one PC, player 1 turns with F/H and player 2 with numpad 4/6. Gamepads turn with the right stick.
+
 ## [0.18.2] - 2026-10-31
 
 ### Changed
