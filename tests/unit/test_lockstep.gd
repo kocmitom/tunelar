@@ -49,6 +49,26 @@ func test_slot_order_groups_local_players() -> void:
 	check_eq(NetScript.slot_name_order({1: ["a", "b"], 3: ["c"], 2: ["d"]}), ["a", "b", "d", "c"], "names in slot order")
 
 
+# Called directly, so the sender is peer 0.
+func test_spectators_take_no_slots() -> void:
+	var net: Node = NetScript.new()
+	tree.root.add_child(net)
+	net.is_host = true
+	net._register("a", 1)
+	check_eq(NetScript.slot_order(net.players), [0] as Array[int], "a player takes a slot")
+	net._register("a", 0)
+	check(net.players.is_empty(), "a spectator is no player")
+	check_eq(net.spectators, {0: "a"}, "listed as spectator")
+	check(NetScript.slot_order(net.players).is_empty(), "a spectator takes no slot")
+	net._register("a", 2)
+	check(net.spectators.is_empty(), "playing again leaves the spectators")
+	check_eq(net.players[0], ["a", "a 2"], "back with both local players")
+	net._register("a", 0)
+	net._on_peer_disconnected(0)
+	check(net.spectators.is_empty(), "a gone spectator is removed")
+	net.free()
+
+
 func test_gone_peer_idles_all_its_slots() -> void:
 	var net: Node = NetScript.new()
 	net.slot_peers.assign([1, 2, 2])

@@ -81,6 +81,15 @@ theme_override_font_sizes/font_size = 20
 disabled = true
 text = "Remove player"
 
+[node name="SpectateButton" type="Button" parent="Center/Column/LocalPlayers"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(180, 44)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 20
+toggle_mode = true
+text = "Spectate"
+
 [node name="MapSize" type="HBoxContainer" parent="Center/Column"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -192,3 +201,4 @@ horizontal_alignment = 2
 [connection signal="pressed" from="Center/Column/LocalPlayers/AddButton" to="." method="_on_add_button_pressed"]
 [connection signal="pressed" from="Center/Column/LocalPlayers/RemoveButton" to="." method="_on_remove_button_pressed"]
 [connection signal="pressed" from="Center/Column/StartButton" to="." method="_on_start_button_pressed"]
+[connection signal="toggled" from="Center/Column/LocalPlayers/SpectateButton" to="." method="_on_spectate_button_toggled"]

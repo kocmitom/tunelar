@@ -31,6 +31,8 @@ var jelly: Jelly
 var bullets_root: Node2D
 var tanks: Array[Tank] = []
 var huds: Array[PlayerHud] = []
+# Only on a spectating PC.
+var spectator_hud: SpectatorHud
 var worms: Array[Worm] = []
 var round_over: bool = false
 var tick: int = 0
@@ -45,7 +47,7 @@ func _ready() -> void:
 	await manager.ready
 	var player_count := router.assign_devices(Input.get_connected_joypads())
 	if Net.in_match:
-		setup(Net.slot_peers.size(), Net.match_seed, Net.local_slots, Net.map_size)
+		setup(Net.slot_peers.size(), Net.match_seed, Net.local_slots, Net.map_size, Net.local_slots.is_empty())
 	else:
 		setup(player_count)
 
@@ -63,9 +65,9 @@ func _physics_process(_delta: float) -> void:
 		simulate(inputs)
 
 
-# local_slots are the players shown on this PC (all of them when empty).
-func setup(player_count: int, match_seed: int = randi(), local_slots: Array[int] = [], size_index: int = 1) -> void:
-	if local_slots.is_empty():
+# local_slots are the players shown on this PC (all of them when empty). A spectating PC has none and sees the whole map.
+func setup(player_count: int, match_seed: int = randi(), local_slots: Array[int] = [], size_index: int = 1, spectate: bool = false) -> void:
+	if local_slots.is_empty() and not spectate:
 		local_slots = []
 		for i in player_count:
 			local_slots.append(i)
@@ -99,6 +101,10 @@ func setup(player_count: int, match_seed: int = randi(), local_slots: Array[int]
 		manager.viewports[i].add_child(hud)
 		hud.setup(local_slots[i], PLAYER_COLORS[local_slots[i]])
 		huds.append(hud)
+	spectator_hud = null
+	if spectate:
+		spectator_hud = SpectatorHud.new()
+		manager.viewports[0].add_child(spectator_hud)
 	Sfx.listeners.clear()
 	for slot in local_slots:
 		Sfx.listeners.append(tanks[slot])
@@ -145,6 +151,8 @@ func start_round(new_seed: int) -> void:
 		tanks[i].respawn(Vector2(terrain.base_rects[i].get_center()))
 	for hud in huds:
 		hud.hide_banner()
+	if spectator_hud:
+		spectator_hud.hide_banner()
 	round_over = false
 	manager.show_map(false)
 	manager.reset_fog(renderer)
@@ -197,15 +205,22 @@ func _check_round_end() -> void:
 		return
 	round_over = true
 	manager.show_map(true)
-	var id: int = winners[0].player_id
-	var winner_name: String = Net.slot_names[id] if Net.in_match else "PLAYER %d" % (id + 1)
+	var winner_name := player_name(winners[0].player_id)
 	for hud in huds:
 		hud.show_banner("%s WINS" % winner_name)
+	if spectator_hud:
+		spectator_hud.show_banner("%s WINS" % winner_name)
 
 
 func _update_huds() -> void:
 	for hud in huds:
 		hud.update_hud(tanks[hud.player_id])
+	if spectator_hud:
+		spectator_hud.update_scores(tanks, tanks.map(func(t: Tank) -> String: return player_name(t.player_id)))
+
+
+func player_name(id: int) -> String:
+	return Net.slot_names[id] if Net.in_match else "PLAYER %d" % (id + 1)
 
 
 func _on_tank_fired(tank: Tank) -> void:

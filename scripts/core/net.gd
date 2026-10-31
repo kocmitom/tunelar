@@ -7,6 +7,8 @@ signal lobby_changed
 const DISCOVERY_PORT := 47801
 const GAME_PORT := 47802
 const MAX_PLAYERS := 6
+# PCs in a lobby, spectators included.
+const MAX_PEERS := 16
 const SEARCH_TIME := 1.5
 const BROADCAST_INTERVAL := 1.0
 const INPUT_DELAY := 2
@@ -20,6 +22,10 @@ var player_name := OS.get_environment("USERNAME")
 var status := "Searching..."
 # players[peer_id] = names of that PC's local players.
 var players := {}
+# spectators[peer_id] = name of a PC that only watches; it has no slots.
+var spectators := {}
+# This PC's choice, kept between matches.
+var spectating := false
 var local_count := 1
 var is_host := false
 var in_match := false
@@ -68,7 +74,7 @@ func _process(delta: float) -> void:
 		if parts.size() != 3 or parts[0] != "tunneler" or parts[1] != version or parts[2].to_int() == token:
 			continue
 		# Two PCs that started together both host; the one with the higher token gives up its empty lobby.
-		if peer == null or (is_host and players.size() == 1 and parts[2].to_int() < token):
+		if peer == null or (is_host and players.size() + spectators.size() == 1 and parts[2].to_int() < token):
 			_join(ip)
 
 	if peer == null:
@@ -85,12 +91,13 @@ func _process(delta: float) -> void:
 func _host() -> void:
 	peer = ENetMultiplayerPeer.new()
 	# The port is taken when another instance already hosts on this PC.
-	if peer.create_server(GAME_PORT, MAX_PLAYERS - 1) != OK:
+	if peer.create_server(GAME_PORT, MAX_PEERS - 1) != OK:
 		_join("127.0.0.1")
 		return
 	multiplayer.multiplayer_peer = peer
 	is_host = true
-	players = {1: _names(player_name, local_count)}
+	players = {} if spectating else {1: _names(player_name, local_count)}
+	spectators = {1: player_name} if spectating else {}
 	_set_status("Hosting lobby")
 
 
@@ -109,6 +116,7 @@ func _leave() -> void:
 	peer = null
 	is_host = false
 	players = {}
+	spectators = {}
 	search_timer = SEARCH_TIME
 	_set_status("Searching...")
 
@@ -120,7 +128,7 @@ func _set_status(text: String) -> void:
 
 func _on_connected() -> void:
 	_set_status("Joined lobby")
-	_register.rpc_id(1, player_name, local_count)
+	_register.rpc_id(1, player_name, 0 if spectating else local_count)
 
 
 func _on_server_disconnected() -> void:
@@ -135,7 +143,8 @@ func _on_peer_disconnected(id: int) -> void:
 				gone_slots[slot] = true
 	if is_host:
 		players.erase(id)
-		_set_players.rpc(players, map_size)
+		spectators.erase(id)
+		_set_players.rpc(players, spectators, map_size)
 
 
 func add_local_player() -> void:
@@ -146,13 +155,23 @@ func remove_local_player() -> void:
 	_register.rpc_id(1, player_name, local_count - 1)
 
 
-# Joining and adding/removing local players; the host keeps the lobby at MAX_PLAYERS.
+func set_spectating(on: bool) -> void:
+	spectating = on
+	_register.rpc_id(1, player_name, 0 if on else local_count)
+
+
+# Joining and adding/removing local players; the host keeps the lobby at MAX_PLAYERS. A count of 0 spectates.
 @rpc("any_peer", "call_local", "reliable")
 func _register(new_name: String, count: int) -> void:
 	var sender := multiplayer.get_remote_sender_id()
-	var others: int = slot_order(players).size() - players.get(sender, []).size()
-	players[sender] = _names(new_name, mini(maxi(count, 1), MAX_PLAYERS - others))
-	_set_players.rpc(players, map_size)
+	if count == 0:
+		players.erase(sender)
+		spectators[sender] = new_name
+	else:
+		spectators.erase(sender)
+		var others: int = slot_order(players).size() - players.get(sender, []).size()
+		players[sender] = _names(new_name, mini(count, MAX_PLAYERS - others))
+	_set_players.rpc(players, spectators, map_size)
 
 
 func set_map_size(index: int) -> void:
@@ -162,13 +181,14 @@ func set_map_size(index: int) -> void:
 @rpc("any_peer", "call_local", "reliable")
 func _request_map_size(index: int) -> void:
 	map_size = index
-	_set_players.rpc(players, map_size)
+	_set_players.rpc(players, spectators, map_size)
 
 
 # Reliable and ahead of _start_match, so every PC starts with the same map size.
 @rpc("authority", "call_local", "reliable")
-func _set_players(list: Dictionary, size: int) -> void:
+func _set_players(list: Dictionary, watchers: Dictionary, size: int) -> void:
 	players = list
+	spectators = watchers
 	map_size = size
 	var own: Array = players.get(multiplayer.get_unique_id(), [])
 	if not own.is_empty():

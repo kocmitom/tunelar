@@ -75,6 +75,28 @@ func test_single_local_slot() -> void:
 	manager.free()
 
 
+func test_spectator_sees_whole_map() -> void:
+	var manager := _make_grid(2)
+	var gm: GameManager = manager.get_node("GameManager")
+	gm.setup(2, 7, [] as Array[int], 1, true)
+	check_eq(manager.grid.get_child_count(), 1, "one viewport")
+	check(manager.fogs.is_empty(), "no fog")
+	check(gm.huds.is_empty(), "no player HUD")
+	check_eq(gm.tanks.size(), 2, "every player has a tank")
+	var cam := manager.cameras[0]
+	check_eq(cam.global_position, Vector2(gm.map_size) / 2.0, "camera on the map center")
+	var seen := Vector2(manager.viewports[0].size) / cam.zoom
+	check(seen.x >= gm.map_size.x - 0.5 and seen.y >= gm.map_size.y - 0.5, "whole map fits (sees %s)" % seen)
+	check(is_equal_approx(seen.x, gm.map_size.x) or is_equal_approx(seen.y, gm.map_size.y), "zoomed in as far as it fits")
+	gm.step()
+	check(gm.spectator_hud.scores.get_parsed_text().contains("PLAYER 2  KILLS 0/%d" % GameManager.KILLS_TO_WIN), "scoreboard lists the players")
+	gm.tanks[0].kills = GameManager.KILLS_TO_WIN
+	gm.step()
+	check(gm.spectator_hud.banner.visible, "banner at round end")
+	check_eq(gm.spectator_hud.banner.text, "PLAYER 1 WINS", "banner text")
+	manager.free()
+
+
 func test_cameras_track_own_tank() -> void:
 	var manager := _make_grid(6)
 	check(manager.cameras[0].get_parent() is SubViewport, "camera is not a tank child")

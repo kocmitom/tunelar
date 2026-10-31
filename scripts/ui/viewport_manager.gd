@@ -28,7 +28,7 @@ func _ready() -> void:
 	get_window().title = "%s v%s" % [ProjectSettings.get_setting("application/config/name"), version]
 
 
-# One viewport per local slot; viewport i follows tanks[local_slots[i]].
+# One viewport per local slot; viewport i follows tanks[local_slots[i]]. Without slots a single viewport spectates the whole map.
 func build(local_slots: Array[int], world_size: Vector2i) -> void:
 	for child in grid.get_children():
 		child.free()
@@ -40,7 +40,7 @@ func build(local_slots: Array[int], world_size: Vector2i) -> void:
 	tanks.clear()
 	slots = local_slots
 	map_size = world_size
-	var count := local_slots.size()
+	var count := maxi(local_slots.size(), 1)
 	grid.columns = 3 if count > 4 else (2 if count > 1 else 1)
 
 	for i in count:
@@ -76,7 +76,7 @@ func build(local_slots: Array[int], world_size: Vector2i) -> void:
 		cameras.append(cam)
 
 	# Fog, pad overlay and sonar i sit on their own visibility layer, which only viewport i draws.
-	for i in count:
+	for i in local_slots.size():
 		var fog := FogOfWar.new()
 		fog.name = "FogOfWar_%d" % (i + 1)
 		fog.visibility_layer = 1 << (i + 1)
@@ -126,6 +126,11 @@ func _on_round_restart_button_pressed() -> void:
 # Each camera follows its tank, and the tank reveals the fog of that viewport.
 # A dead tank's viewport, or every viewport once the map is shown, drops its fog and pans with that player's move input.
 func update_cameras(inputs: Array[Dictionary] = [], delta: float = 0.0) -> void:
+	if slots.is_empty():
+		var fit := Vector2(viewports[0].size) / map_size
+		cameras[0].zoom = Vector2.ONE * minf(fit.x, fit.y)
+		cameras[0].global_position = map_size / 2.0
+		return
 	for i in cameras.size():
 		var cam := cameras[i]
 		var tank := tanks[slots[i]]

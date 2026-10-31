@@ -4,6 +4,13 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-10-31
+
+### Added
+- Spectator mode: a Spectate toggle in the lobby makes this PC watch instead of play. It takes no player slot and is listed in gray as "name (spectating)"; Start still needs 2 players, and the match never waits for a spectator. The choice is kept when the PC comes back to the lobby, and it is picked in the lobby only, not during a running match.
+- A spectating PC shows the whole map at once, without fog, zoomed to fit the window, with every player's kills in their color at the top left and the winner banner at the end of the round.
+- Up to 16 PCs can join a lobby, so spectators fit next to 6 players.
+
 ## [0.23.0] - 2026-10-31
 
 ### Added

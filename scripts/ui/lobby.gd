@@ -13,11 +13,13 @@ const NOTE_ICON := [
 	"..##.....",
 	".........",
 ]
+const COLOR_SPECTATOR := Color(0.6, 0.6, 0.6)
 
 @onready var status_label: Label = %Status
 @onready var player_list: VBoxContainer = %Players
 @onready var add_button: Button = %AddButton
 @onready var remove_button: Button = %RemoveButton
+@onready var spectate_button: Button = %SpectateButton
 @onready var start_button: Button = %StartButton
 # In GameManager.MAP_SIZE_NAMES order, after the "Map" label.
 @onready var map_buttons: Array = %MapSize.get_children().slice(1)
@@ -64,13 +66,25 @@ func _refresh() -> void:
 			label.add_theme_color_override("font_color", GameManager.PLAYER_COLORS[slot])
 			player_list.add_child(label)
 			slot += 1
+	var watchers := Net.spectators.keys()
+	watchers.sort()
+	for id in watchers:
+		var label := Label.new()
+		label.text = "%s  (spectating)" % Net.spectators[id]
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		label.add_theme_font_size_override("font_size", 20)
+		label.add_theme_color_override("font_color", COLOR_SPECTATOR)
+		player_list.add_child(label)
+	var registered: bool = not own.is_empty() or Net.spectators.has(my_id)
 	var free_devices := 2 + Input.get_connected_joypads().size() - Net.local_count
 	add_button.disabled = own.is_empty() or slot >= Net.MAX_PLAYERS or free_devices <= 0
 	remove_button.disabled = own.size() <= 1
+	spectate_button.set_pressed_no_signal(Net.spectating)
+	spectate_button.disabled = not registered
 	start_button.disabled = slot < 2
 	for i in map_buttons.size():
 		map_buttons[i].set_pressed_no_signal(i == Net.map_size)
-		map_buttons[i].disabled = own.is_empty()
+		map_buttons[i].disabled = not registered
 
 
 func _on_add_button_pressed() -> void:
@@ -79,6 +93,10 @@ func _on_add_button_pressed() -> void:
 
 func _on_remove_button_pressed() -> void:
 	Net.remove_local_player()
+
+
+func _on_spectate_button_toggled(on: bool) -> void:
+	Net.set_spectating(on)
 
 
 func _on_start_button_pressed() -> void:
