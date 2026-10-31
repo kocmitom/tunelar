@@ -10,6 +10,7 @@ const BEDROCK := 2
 const BASE_START := 3
 const GOLD := 4
 const ENERGY := 5
+const DRAIN := 6
 
 const BORDER := 2
 const BASE_SIZE := 31
@@ -30,6 +31,9 @@ const ENERGY_RADIUS_MIN := 2.0
 const ENERGY_RADIUS_MAX := 4.0
 # Battery recharged per dug energy cell, so bigger blobs give more.
 const ENERGY_VALUE := 1.0
+# Red blobs the size of energy blobs; each dug cell drains DRAIN_VALUE from the battery.
+const DRAIN_COVERAGE := 0.005
+const DRAIN_VALUE := 1.0
 # Slot order spreads the first bases far apart on the 3x2 region grid.
 const SLOT_ORDER: Array[int] = [0, 5, 2, 3, 1, 4]
 
@@ -38,8 +42,9 @@ var height: int
 var cells: PackedByteArray
 var map_seed: int = 0
 var base_rects: Array[Rect2i] = []
-# Energy cells removed by the last dig_circle call.
+# Energy and drain cells removed by the last dig_circle call.
 var dug_energy: int = 0
+var dug_drain: int = 0
 
 
 func _init(w: int = 320, h: int = 200) -> void:
@@ -63,6 +68,10 @@ func set_cell(x: int, y: int, value: int) -> void:
 	cells_changed.emit(Rect2i(x, y, 1, 1))
 
 
+static func is_diggable(cell: int) -> bool:
+	return cell == DIRT or cell == GOLD or cell == ENERGY or cell == DRAIN
+
+
 func is_passable(x: int, y: int) -> bool:
 	return get_cell(x, y) != BEDROCK
 
@@ -84,6 +93,7 @@ func dig_circle(cx: int, cy: int, radius: int) -> int:
 	var r2 := radius * radius
 	var dug := 0
 	dug_energy = 0
+	dug_drain = 0
 	for y in range(y0, y1 + 1):
 		for x in range(x0, x1 + 1):
 			var dx := x - cx
@@ -91,9 +101,10 @@ func dig_circle(cx: int, cy: int, radius: int) -> int:
 			if dx * dx + dy * dy > r2:
 				continue
 			var i := y * width + x
-			if cells[i] == DIRT or cells[i] == GOLD or cells[i] == ENERGY:
+			if is_diggable(cells[i]):
 				dug += GOLD_VALUE if cells[i] == GOLD else 1
 				dug_energy += 1 if cells[i] == ENERGY else 0
+				dug_drain += 1 if cells[i] == DRAIN else 0
 				cells[i] = AIR
 	if dug > 0:
 		cells_changed.emit(Rect2i(x0, y0, x1 - x0 + 1, y1 - y0 + 1))
@@ -138,6 +149,7 @@ func generate(new_seed: int, base_count: int) -> void:
 	_place_blobs(rng, BEDROCK, ROCK_COVERAGE, ROCK_RADIUS_MIN, ROCK_RADIUS_MAX)
 	_place_blobs(rng, GOLD, GOLD_COVERAGE, GOLD_RADIUS_MIN, GOLD_RADIUS_MAX)
 	_place_blobs(rng, ENERGY, ENERGY_COVERAGE, ENERGY_RADIUS_MIN, ENERGY_RADIUS_MAX)
+	_place_blobs(rng, DRAIN, DRAIN_COVERAGE, ENERGY_RADIUS_MIN, ENERGY_RADIUS_MAX)
 	for rect in base_rects:
 		_stamp_base(rect)
 

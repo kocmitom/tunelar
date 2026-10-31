@@ -62,6 +62,17 @@ func test_dig_energy_counted() -> void:
 	check_eq(t.dug_energy, 0, "count resets every dig")
 
 
+func test_dig_drain_counted() -> void:
+	var t := TerrainData.new()
+	for x in range(49, 52):
+		t.cells[50 * t.width + x] = TerrainData.DRAIN
+	check_eq(t.dig_circle(50, 50, 3), 29, "drain cells worth 1 money like dirt")
+	check_eq(t.dug_drain, 3, "drain cells counted")
+	check_eq(t.get_cell(50, 50), TerrainData.AIR, "drain dug")
+	t.dig_circle(60, 50, 3)
+	check_eq(t.dug_drain, 0, "count resets every dig")
+
+
 func test_circle_passable() -> void:
 	var t := TerrainData.new()
 	check(t.is_circle_passable(50, 50, 3), "dirt circle passable")
@@ -123,7 +134,7 @@ func test_rocks_rare_and_clustered() -> void:
 
 
 func test_gold_and_energy_scattered_outside_bases() -> void:
-	for cell in [TerrainData.GOLD, TerrainData.ENERGY]:
+	for cell in [TerrainData.GOLD, TerrainData.ENERGY, TerrainData.DRAIN]:
 		for map_seed in [1, 7, 42, 1234, 99999, 31337, 2026, 5]:
 			var t := TerrainData.new()
 			t.generate(map_seed, 6)

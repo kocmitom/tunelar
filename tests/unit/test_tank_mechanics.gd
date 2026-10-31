@@ -178,6 +178,20 @@ func test_digging_energy_recharges() -> void:
 	tank.free()
 
 
+func test_digging_drain_cells() -> void:
+	var terrain := TerrainData.new()
+	for y in range(90, 111):
+		for x in range(70, 90):
+			terrain.cells[y * terrain.width + x] = TerrainData.DRAIN
+	var tank := _spawn(terrain, Vector2(60, 100))
+	_drive(tank, Vector2.RIGHT, 1.0)
+	check(Tank.MAX_ENERGY - tank.energy > Tank.ENERGY_DRAIN_DIGGING + 10.0 * TerrainData.DRAIN_VALUE, "dug red cells drain the battery")
+	tank.energy = 1.0
+	_drive(tank, Vector2.RIGHT, 0.5)
+	check(tank.energy >= 0.0, "energy never goes negative")
+	tank.free()
+
+
 # Drives off the pad (to the base center) and back onto it.
 func _visit(tank: Tank, pad: Vector2) -> void:
 	tank.position = Vector2(tank.home_rect.get_center())

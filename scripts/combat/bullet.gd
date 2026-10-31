@@ -36,7 +36,7 @@ func step(delta: float) -> void:
 			velocity = velocity.bounce(_wall_normal(next))
 			continue
 		global_position = next
-		if cell == TerrainData.DIRT or cell == TerrainData.GOLD or cell == TerrainData.ENERGY:
+		if TerrainData.is_diggable(cell):
 			terrain.dig_circle(roundi(next.x), roundi(next.y), DENT_RADIUS)
 			_die()
 			return

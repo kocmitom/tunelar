@@ -141,7 +141,7 @@ func step_movement(delta: float, input_dir: Vector2) -> void:
 	var dig_radius := tank_radius + DIG_MARGIN
 	var probe := global_position + dir * (dig_radius + 2)
 	var probe_cell := terrain.get_cell(roundi(probe.x), roundi(probe.y))
-	var digging := probe_cell == TerrainData.DIRT or probe_cell == TerrainData.GOLD or probe_cell == TerrainData.ENERGY
+	var digging := TerrainData.is_diggable(probe_cell)
 	var current_speed := SPEED_CLEAR
 	var drain := ENERGY_DRAIN_MOVE_CLEAR
 	# Other players' jelly slows like digging, without the drain.
@@ -160,7 +160,7 @@ func step_movement(delta: float, input_dir: Vector2) -> void:
 	velocity = dir * current_speed
 	move_and_collide(velocity * delta)
 	money += terrain.dig_circle(roundi(global_position.x), roundi(global_position.y), dig_radius)
-	energy = minf(max_energy(), energy + terrain.dug_energy * TerrainData.ENERGY_VALUE)
+	energy = clampf(energy + terrain.dug_energy * TerrainData.ENERGY_VALUE - terrain.dug_drain * TerrainData.DRAIN_VALUE, 0.0, max_energy())
 	if special == Special.JELLY:
 		jelly.lay(global_position, player_id, color)
 

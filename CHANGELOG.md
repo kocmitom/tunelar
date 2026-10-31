@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-10-31
+
+### Added
+- Drain blobs: red veins, as common and as big as the energy veins, are scattered across the map away from the houses. They dig and stop bullets like dirt and earn 1 money per cell, but every red cell your tank digs drains 1 energy from the battery.
+
 ## [0.15.3] - 2026-10-31
 
 ### Changed
