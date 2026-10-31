@@ -9,6 +9,8 @@ const SPECTATE_SPEED := 240.0
 var viewports: Array[SubViewport] = []
 var cameras: Array[Camera2D] = []
 var fogs: Array[FogOfWar] = []
+var pads: Array[Sprite2D] = []
+var sonars: Array[Sonar] = []
 var tanks: Array[Tank] = []
 var slots: Array[int] = []
 var world_root: Node2D
@@ -32,6 +34,8 @@ func build(local_slots: Array[int], map_size: Vector2i) -> void:
 	viewports.clear()
 	cameras.clear()
 	fogs.clear()
+	pads.clear()
+	sonars.clear()
 	tanks.clear()
 	slots = local_slots
 	var count := local_slots.size()
@@ -73,7 +77,7 @@ func build(local_slots: Array[int], map_size: Vector2i) -> void:
 		viewports.append(viewport)
 		cameras.append(cam)
 
-	# Fog i sits on its own visibility layer, which only viewport i draws.
+	# Fog, pad overlay and sonar i sit on their own visibility layer, which only viewport i draws.
 	for i in count:
 		var fog := FogOfWar.new()
 		fog.name = "FogOfWar_%d" % (i + 1)
@@ -81,12 +85,28 @@ func build(local_slots: Array[int], map_size: Vector2i) -> void:
 		viewports[i].canvas_cull_mask = 1 | fog.visibility_layer
 		world_root.add_child(fog)
 		fogs.append(fog)
+		var pad := Sprite2D.new()
+		pad.name = "Pads_%d" % (i + 1)
+		pad.centered = false
+		pad.z_index = -1
+		pad.visibility_layer = fog.visibility_layer
+		world_root.add_child(pad)
+		pads.append(pad)
+		var sonar := Sonar.new()
+		sonar.name = "Sonar_%d" % (i + 1)
+		sonar.z_index = 11
+		sonar.visibility_layer = fog.visibility_layer
+		sonar.visible = false
+		world_root.add_child(sonar)
+		sonars.append(sonar)
 
 
-func reset_fog(terrain: Image) -> void:
+func reset_fog(renderer: TerrainRenderer) -> void:
 	for i in fogs.size():
 		var tank := tanks[slots[i]]
-		fogs[i].reset(terrain)
+		var overlay := renderer.pad_overlay(slots[i])
+		pads[i].texture = ImageTexture.create_from_image(overlay)
+		fogs[i].reset(renderer.image, overlay)
 		fogs[i].visible = true
 		fogs[i].reveal(tank.global_position, FogOfWar.SPAWN_REVEAL_SCALE * tank.reveal_radius())
 
@@ -123,3 +143,11 @@ func update_cameras(inputs: Array[Dictionary] = [], delta: float = 0.0) -> void:
 			cam.global_position = tank.global_position
 			fogs[i].visible = true
 			fogs[i].reveal(tank.global_position, tank.reveal_radius())
+		# Moved once per tick, so physics interpolation keeps the sonar on the tank.
+		var sonar := sonars[i]
+		sonar.visible = tank.special == Tank.Special.RADAR and not tank.is_dead and not map_shown
+		sonar.position = tank.global_position
+		sonar.angles.clear()
+		for other in tanks:
+			if other != tank and not other.is_dead:
+				sonar.angles.append((other.global_position - tank.global_position).angle())

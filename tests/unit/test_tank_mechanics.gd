@@ -259,22 +259,6 @@ func test_enemy_pads_switch_specials() -> void:
 	tank.free()
 
 
-func test_closest() -> void:
-	var terrain := TerrainData.new()
-	var tank := _spawn(terrain, Vector2(60, 100))
-	var near := _spawn(terrain, Vector2(90, 100))
-	var far := _spawn(terrain, Vector2(60, 180))
-	var tanks: Array[Tank] = [tank, far, near]
-	check_eq(tank.closest(tanks), near, "nearest other tank")
-	near.is_dead = true
-	check_eq(tank.closest(tanks), far, "dead tanks skipped")
-	far.is_dead = true
-	check_eq(tank.closest(tanks), null, "nobody left")
-	tank.free()
-	near.free()
-	far.free()
-
-
 func test_jelly_slows_others() -> void:
 	var terrain := TerrainData.new()
 	for x in range(40, 280):
@@ -284,6 +268,7 @@ func test_jelly_slows_others() -> void:
 	var layer := _spawn(terrain, Vector2(100, 100))
 	layer.jelly = jelly
 	layer.special = Tank.Special.JELLY
+	layer.color = Color.RED
 	var follower := _spawn(terrain, Vector2(60, 100))
 	follower.jelly = jelly
 	follower.player_id = 1
@@ -291,6 +276,9 @@ func test_jelly_slows_others() -> void:
 		jelly.step()
 		layer.step_movement(DT, Vector2.RIGHT)
 	check_near(layer.position.x, 100.0 + Tank.SPEED_CLEAR, 1.0, "own jelly does not slow")
+	var cell := jelly.image.get_pixel(130, 100)
+	check(cell.r == 1.0 and cell.g == 0.0, "jelly in the owner's color")
+	check_near(cell.a, Jelly.ALPHA, 0.01, "jelly half transparent")
 	follower.position = Vector2(120, 100)
 	_drive(follower, Vector2.RIGHT, 0.5)
 	check_near(follower.position.x, 120.0 + Tank.SPEED_DIGGING * 0.5, 1.0, "other jelly slows to digging speed")

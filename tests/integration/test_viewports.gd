@@ -68,6 +68,38 @@ func test_cameras_track_own_tank() -> void:
 	manager.free()
 
 
+func test_enemy_pads_per_viewport() -> void:
+	var manager := _make_grid(2)
+	var gm: GameManager = manager.get_node("GameManager")
+	var own := Vector2i(TerrainData.pad_rects(gm.terrain.base_rects[0])[Tank.Special.LASER].get_center())
+	var enemy := Vector2i(TerrainData.pad_rects(gm.terrain.base_rects[1])[Tank.Special.LASER].get_center())
+	var overlay := manager.pads[0].texture.get_image()
+	check_eq(overlay.get_pixelv(own).a, 0.0, "own base keeps the upgrade icons")
+	check(overlay.get_pixelv(enemy).a > 0.0, "enemy base shows the switch icons")
+	check(manager.pads[1].texture.get_image().get_pixelv(own).a > 0.0, "the other player sees switches in P1's base")
+	check(manager.pads[0].visibility_layer == manager.fogs[0].visibility_layer, "overlay drawn only in its viewport")
+	manager.free()
+
+
+func test_sonar() -> void:
+	var manager := _make_grid(2)
+	var gm: GameManager = manager.get_node("GameManager")
+	manager.update_cameras()
+	check(not manager.sonars[0].visible, "no sonar without the radar")
+	gm.tanks[0].special = Tank.Special.RADAR
+	manager.update_cameras()
+	var sonar := manager.sonars[0]
+	check(sonar.visible, "sonar shown with the radar")
+	check(not manager.sonars[1].visible, "only for that player")
+	check_eq(sonar.position, gm.tanks[0].global_position, "sonar on the tank")
+	check_eq(sonar.angles.size(), 1, "one other player")
+	check_near(sonar.angles[0], (gm.tanks[1].global_position - gm.tanks[0].global_position).angle(), 0.001, "points at the other tank")
+	gm.tanks[1].destroy()
+	manager.update_cameras()
+	check(sonar.angles.is_empty(), "dead tanks not tracked")
+	manager.free()
+
+
 func test_dead_player_spectates() -> void:
 	var manager := _make_grid(2)
 	var gm: GameManager = manager.get_node("GameManager")

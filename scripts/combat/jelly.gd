@@ -1,10 +1,10 @@
 class_name Jelly
 extends Sprite2D
-## Green trail left by tanks with the jelly special; other tanks drive through it at digging speed. Uploads at most once per frame.
+## Trail in its owner's color left by tanks with the jelly special; other tanks drive through it at digging speed. Uploads at most once per frame.
 
 const LIFETIME_TICKS := 5 * GameManager.TICK_RATE
 const RADIUS := 1
-const COLOR := Color(0.3, 1.0, 0.3, 0.7)
+const ALPHA := 0.5
 
 var image: Image
 var now: int = 0
@@ -37,7 +37,7 @@ func _process(_delta: float) -> void:
 		_dirty = false
 
 
-func lay(center: Vector2, owner_id: int) -> void:
+func lay(center: Vector2, owner_id: int, color: Color) -> void:
 	var w := image.get_width()
 	var c := Vector2i(center.round())
 	for y in range(maxi(c.y - RADIUS, 0), mini(c.y + RADIUS, image.get_height() - 1) + 1):
@@ -46,7 +46,7 @@ func lay(center: Vector2, owner_id: int) -> void:
 			_expiry[i] = now + LIFETIME_TICKS
 			_owner[i] = owner_id
 			_queue.append(Vector2i(i, now + LIFETIME_TICKS))
-			image.set_pixel(x, y, COLOR)
+			image.set_pixel(x, y, Color(color, ALPHA))
 	_dirty = true
 
 

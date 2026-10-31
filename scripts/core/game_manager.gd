@@ -125,7 +125,7 @@ func start_round(new_seed: int) -> void:
 		hud.hide_banner()
 	round_over = false
 	manager.show_map(false)
-	manager.reset_fog(renderer.image)
+	manager.reset_fog(renderer)
 	manager.update_cameras()
 	for cam in manager.cameras:
 		cam.reset_physics_interpolation()
@@ -178,8 +178,7 @@ func _check_round_end() -> void:
 
 func _update_huds() -> void:
 	for hud in huds:
-		var tank := tanks[hud.player_id]
-		hud.update_hud(tank, tank.closest(tanks))
+		hud.update_hud(tanks[hud.player_id])
 
 
 func _on_tank_fired(tank: Tank) -> void:

@@ -67,12 +67,6 @@ theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 4
 text = "$ 0  SH 0  EN 0  SP 0  RA 0"
 
-[node name="Radar" type="Polygon2D" parent="."]
-visible = false
-position = Vector2(28, 80)
-color = Color(1, 0.35, 0.3, 1)
-polygon = PackedVector2Array(12, 0, -8, -8, -4, 0, -8, 8)
-
 [node name="WinsLabel" type="Label" parent="."]
 anchors_preset = 1
 anchor_left = 1.0

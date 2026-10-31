@@ -15,6 +15,8 @@ const EXPLORED_DIM := 0.5
 
 var image: Image
 var terrain_image: Image
+# This player's pad overlay; its opaque pixels replace the terrain as last seen.
+var pads_image: Image
 var _explored: PackedByteArray
 var _view_center := Vector2i.ZERO
 var _view_radius := -1
@@ -26,8 +28,9 @@ func _init() -> void:
 	z_index = 10
 
 
-func reset(terrain: Image) -> void:
+func reset(terrain: Image, pads: Image) -> void:
 	terrain_image = terrain
+	pads_image = pads
 	image = Image.create(terrain.get_width(), terrain.get_height(), false, Image.FORMAT_RGBA8)
 	image.fill(COLOR_FOG)
 	texture = ImageTexture.create_from_image(image)
@@ -89,9 +92,13 @@ static func _span(center: Vector2i, radius: int, y: int) -> Vector2i:
 func _set_live(y: int, x0: int, x1: int, live: bool) -> void:
 	var w := image.get_width()
 	for x in range(maxi(x0, 0), mini(x1, w - 1) + 1):
-		if _explored[y * w + x] == 1:
-			image.set_pixel(x, y, Color.TRANSPARENT if live else terrain_image.get_pixel(x, y).lerp(COLOR_FOG, EXPLORED_DIM))
-			_dirty = true
+		if _explored[y * w + x] == 0:
+			continue
+		var seen := pads_image.get_pixel(x, y)
+		if seen.a == 0.0:
+			seen = terrain_image.get_pixel(x, y)
+		image.set_pixel(x, y, Color.TRANSPARENT if live else seen.lerp(COLOR_FOG, EXPLORED_DIM))
+		_dirty = true
 
 
 static func reveal_radius(tank_radius: int) -> int:

@@ -4,6 +4,14 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-10-31
+
+### Changed
+- Every player sees the special switch icons on the pads of the other players' bases: a fan for the 5-way cannon, a beam for the laser, a drop for the jelly and a sonar for the radar. Your own base still shows the upgrade icons.
+- The laser costs 10 energy per shot instead of 25.
+- The radar is a sonar instead of an arrow: a line sweeps around your tank, seen only by you, and flares up (thicker and fully opaque instead of half transparent) whenever it points at another player.
+- The jelly trail is drawn in its owner's color, half transparent.
+
 ## [0.14.0] - 2026-10-31
 
 ### Added

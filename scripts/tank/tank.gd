@@ -31,7 +31,7 @@ const SPEED_PER_LEVEL := 0.25
 const RADAR_PER_LEVEL := 0.25
 # Free switches on the pads of other players' bases, in Upgrade pad order; one is active at a time.
 enum Special { SPREAD, LASER, JELLY, RADAR }
-const ENERGY_COST_LASER := 25.0
+const ENERGY_COST_LASER := 10.0
 
 static var _texture: ImageTexture
 
@@ -127,17 +127,6 @@ func reveal_radius() -> int:
 	return roundi(FogOfWar.reveal_radius(tank_radius) * (1.0 + RADAR_PER_LEVEL * levels[Upgrade.RADAR]))
 
 
-# Nearest living tank other than this one, or null.
-func closest(others: Array[Tank]) -> Tank:
-	var best: Tank = null
-	for other in others:
-		if other == self or other.is_dead:
-			continue
-		if best == null or global_position.distance_squared_to(other.global_position) < global_position.distance_squared_to(best.global_position):
-			best = other
-	return best
-
-
 func step_movement(delta: float, input_dir: Vector2) -> void:
 	var dir := snap_direction(input_dir)
 	if is_dead or dir == Vector2.ZERO:
@@ -172,7 +161,7 @@ func step_movement(delta: float, input_dir: Vector2) -> void:
 	money += terrain.dig_circle(roundi(global_position.x), roundi(global_position.y), dig_radius)
 	energy = minf(max_energy(), energy + terrain.dug_energy * TerrainData.ENERGY_VALUE)
 	if special == Special.JELLY:
-		jelly.lay(global_position, player_id)
+		jelly.lay(global_position, player_id, color)
 
 
 func try_fire() -> bool:

@@ -59,6 +59,54 @@ const PAD_ICONS := [
 		".........",
 	],
 ]
+# Special switch pads in other players' bases, in Tank.Special order.
+const SPECIAL_COLORS: Array[Color] = [Color8(255, 140, 40), Color8(255, 60, 50), Color8(170, 255, 60), Color8(40, 200, 160)]
+const SPECIAL_ICONS := [
+	[
+		".........",
+		".#..#..#.",
+		"..#.#.#..",
+		"...###...",
+		".#######.",
+		"...###...",
+		"...###...",
+		"...###...",
+		".........",
+	],
+	[
+		".........",
+		".........",
+		".##......",
+		".###.....",
+		".#######.",
+		".###.....",
+		".##......",
+		".........",
+		".........",
+	],
+	[
+		".........",
+		"....#....",
+		"...#.#...",
+		"..#...#..",
+		".#.....#.",
+		".#.....#.",
+		".#.....#.",
+		"..#####..",
+		".........",
+	],
+	[
+		".........",
+		"...###...",
+		"..#...##.",
+		".#...#.#.",
+		".#..#..#.",
+		".#.....#.",
+		"..#...#..",
+		"...###...",
+		".........",
+	],
+]
 
 var terrain: TerrainData
 var image: Image
@@ -72,6 +120,8 @@ func bind(data: TerrainData) -> void:
 		terrain.cells_changed.disconnect(_on_cells_changed)
 	terrain = data
 	centered = false
+	# Below the per-viewport pad overlays.
+	z_index = -2
 	image = Image.create(terrain.width, terrain.height, false, Image.FORMAT_RGBA8)
 	_on_cells_changed(Rect2i(0, 0, terrain.width, terrain.height))
 	texture = ImageTexture.create_from_image(image)
@@ -121,6 +171,22 @@ func _color_at(x: int, y: int) -> Color:
 		TerrainData.BASE_START:
 			return COLOR_BASE
 	return COLOR_AIR
+
+
+# Transparent except for the special pads in every base but own's, as player own sees them.
+func pad_overlay(own: int) -> Image:
+	var overlay := Image.create(terrain.width, terrain.height, false, Image.FORMAT_RGBA8)
+	for i in mini(terrain.base_rects.size(), base_colors.size()):
+		if i == own:
+			continue
+		var floor_color := base_colors[i].darkened(BASE_FLOOR_DARKEN)
+		var rects := TerrainData.pad_rects(terrain.base_rects[i])
+		for pad in rects.size():
+			for y in TerrainData.PAD_SIZE:
+				for x in TerrainData.PAD_SIZE:
+					var lit: bool = SPECIAL_ICONS[pad][y][x] == "#"
+					overlay.set_pixelv(rects[pad].position + Vector2i(x, y), SPECIAL_COLORS[pad] if lit else floor_color.lerp(SPECIAL_COLORS[pad], PAD_TINT))
+	return overlay
 
 
 func _base_owner(x: int, y: int) -> int:

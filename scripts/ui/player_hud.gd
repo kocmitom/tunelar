@@ -13,7 +13,6 @@ var color: Color = Color.WHITE
 @onready var money_label: Label = $MoneyLabel
 @onready var wins_label: Label = $WinsLabel
 @onready var banner: Label = $Banner
-@onready var radar: Polygon2D = $Radar
 
 
 func _ready() -> void:
@@ -26,8 +25,7 @@ func setup(id: int, player_color: Color) -> void:
 	energy_bar.self_modulate = color
 
 
-# target is the tank the radar points to.
-func update_hud(tank: Tank, target: Tank = null) -> void:
+func update_hud(tank: Tank) -> void:
 	energy_bar.max_value = tank.max_energy()
 	energy_bar.value = tank.energy
 	for i in shield_segments.size():
@@ -36,9 +34,6 @@ func update_hud(tank: Tank, target: Tank = null) -> void:
 	money_label.text = "$ %d  SH %d  EN %d  SP %d  RA %d" % ([tank.money] + tank.levels)
 	if tank.special >= 0:
 		money_label.text += "  " + SPECIAL_NAMES[tank.special]
-	radar.visible = tank.special == Tank.Special.RADAR and target != null
-	if radar.visible:
-		radar.rotation = (target.global_position - tank.global_position).angle()
 	wins_label.text = "P%d  KILLS %d/%d" % [player_id + 1, tank.kills, GameManager.KILLS_TO_WIN]
 
 
