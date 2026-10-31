@@ -7,10 +7,10 @@ signal destroyed(tank: Tank, attacker: Tank)
 
 const MAX_ENERGY := 100.0
 const SPEED_CLEAR := 60.0
-const SPEED_DIGGING := 25.0
+const SPEED_DIGGING := 12.5
 const ENERGY_DRAIN_IDLE := 0.0
 const ENERGY_DRAIN_MOVE_CLEAR := 0.0
-const ENERGY_DRAIN_DIGGING := 7.5
+const ENERGY_DRAIN_DIGGING := 3.75
 const ENERGY_RECHARGE_BASE := 25.0
 const ENERGY_REGEN_PASSIVE := 0.5
 const LOW_ENERGY := 10.0

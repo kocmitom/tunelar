@@ -153,11 +153,11 @@ func test_digging_earns_money() -> void:
 	_drive(tank, Vector2.RIGHT, 1.0)
 	var dug := tank.money
 	check(dug > 0, "digging earns money")
-	_drive(tank, Vector2.LEFT, 0.3)
+	_drive(tank, Vector2.LEFT, 0.15)
 	check_eq(tank.money, dug, "driving through a dug tunnel earns nothing")
 	tank.energy = Tank.MAX_ENERGY
 	tank.money = 0
-	_drive(tank, Vector2.RIGHT, 14.0)
+	_drive(tank, Vector2.RIGHT, 28.0)
 	check_eq(tank.energy, 0.0, "battery drained")
 	check_near(tank.money, Tank.UPGRADE_COST, Tank.UPGRADE_COST * 0.1, "one full battery of digging pays for a level 1 upgrade")
 	tank.free()
