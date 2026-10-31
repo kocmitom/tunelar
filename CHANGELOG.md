@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.16.5] - 2026-10-31
+
+### Fixed
+- A tank pressed against a house wall from outside can no longer shoot through it: bullets and the laser now start in front of the wall and hit it.
+
 ## [0.16.4] - 2026-10-31
 
 ### Changed

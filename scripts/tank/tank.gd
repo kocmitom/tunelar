@@ -185,8 +185,15 @@ func fire_directions() -> Array[Vector2]:
 	return [facing, facing.rotated(-PI / 4.0), facing.rotated(PI / 4.0), facing.rotated(-PI / 2.0), facing.rotated(PI / 2.0)]
 
 
+# Stops in front of bedrock along the barrel, so a tank touching a wall cannot shoot through it.
 func muzzle_position(dir: Vector2 = facing) -> Vector2:
-	return global_position + dir * (tank_radius + 2)
+	var p := global_position
+	for i in tank_radius + 2:
+		var next := p + dir
+		if terrain.get_cell(roundi(next.x), roundi(next.y)) == TerrainData.BEDROCK:
+			break
+		p = next
+	return p
 
 
 # Each full shield absorbs one hit; a hit with no full shield left destroys the tank. The own base is a safe zone.

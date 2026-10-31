@@ -132,6 +132,20 @@ func test_spread_fire_directions() -> void:
 	tank.free()
 
 
+func test_no_shooting_through_a_wall() -> void:
+	var terrain := _corridor()
+	var tank := _spawn(terrain, Vector2(100, 100))
+	for y in range(90, 111):
+		terrain.cells[y * terrain.width + 104] = TerrainData.BEDROCK
+	check(tank.muzzle_position(Vector2.RIGHT).x < 104.0, "muzzle stays in front of a touching wall")
+	var bullet := _bullet(terrain, tank.muzzle_position(Vector2.RIGHT), Vector2(Bullet.BULLET_SPEED, 0))
+	bullet.max_bounces = 0
+	bullet.step(DT)
+	check(bullet.is_dead, "bullet stopped by the wall")
+	check_near(tank.muzzle_position(Vector2.LEFT).x, 100.0 - tank.tank_radius - 2, 0.001, "open side keeps the full barrel")
+	tank.free()
+
+
 func test_laser() -> void:
 	var terrain := _corridor()
 	var shooter := _spawn(terrain, Vector2(100, 100))
