@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.27.2] - 2026-11-01
+
+### Fixed
+- The "-$N" money popup is drawn at screen resolution, so its text is crisp instead of blocky.
+
 ## [0.27.1] - 2026-11-01
 
 ### Changed
