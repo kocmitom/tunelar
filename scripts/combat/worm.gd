@@ -25,8 +25,8 @@ static var SPAWN_DELAY_TICKS := 20 * GameManager.TICK_RATE
 static var SPAWN_BASE_DISTANCE := 96.0
 # Bullet or laser hits that kill it.
 static var HEALTH := 5
-static var SPICE_MIN_TICKS := 15 * GameManager.TICK_RATE
-static var SPICE_MAX_TICKS := 25 * GameManager.TICK_RATE
+static var SPICE_MIN_TICKS := 30 * GameManager.TICK_RATE
+static var SPICE_MAX_TICKS := 50 * GameManager.TICK_RATE
 const COLOR := Color8(222, 190, 120)
 const COLOR_HEAD := Color8(150, 105, 60)
 # Alpha of segments under the ground.
@@ -88,8 +88,11 @@ func touches(p: Vector2, reach: float) -> bool:
 
 func hit() -> void:
 	health -= 1
-	if health > 0:
-		return
+	if health <= 0:
+		die()
+
+
+func die() -> void:
 	for p in body:
 		terrain.fill_circle(roundi(p.x), roundi(p.y), RADIUS, TerrainData.GOLD)
 	Sfx.play(Sfx.Kind.DESTROY, body[0])
@@ -137,6 +140,7 @@ func step(delta: float) -> void:
 
 	for tank in tanks:
 		if not tank.is_dead and touches(tank.global_position, tank.tank_radius):
+			tank.fine()
 			tank.destroy()
 	queue_redraw()
 

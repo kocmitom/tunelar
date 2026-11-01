@@ -1,7 +1,7 @@
 class_name SpiceBlow
 extends Node2D
-## Spice blow: clears all sand within RADIUS of a spice pocket and destroys the tanks there; every pocket it reaches blows too.
-## The whole chain counts as one blow, so its kills go to whoever set it off, if they survive it. Then it plays a short expanding ring per center.
+## Spice blow: clears all sand within RADIUS of a spice pocket, kills the worm there and hits the tanks there as hard as a full tank with 2 shield levels can take; every pocket it reaches blows too.
+## Tanks it destroys are fined. The whole chain counts as one blow, so its kills go to whoever set it off, if they survive it. Then it plays a short expanding ring per center.
 
 # A bit over half the sight radius of a level 1 radar.
 static var RADIUS := 30
@@ -14,7 +14,7 @@ var centers: Array[Vector2] = []
 var _time: float = 0.0
 
 
-func detonate(terrain: TerrainData, tanks: Array[Tank], cell: Vector2i, attacker: Tank) -> void:
+func detonate(terrain: TerrainData, tanks: Array[Tank], worms: Array[Worm], cell: Vector2i, attacker: Tank) -> void:
 	position = Vector2(cell)
 	var queue: Array[Vector2i] = [cell]
 	var i := 0
@@ -27,12 +27,20 @@ func detonate(terrain: TerrainData, tanks: Array[Tank], cell: Vector2i, attacker
 	for c in queue:
 		centers.append(Vector2(c - cell))
 	Sfx.play(Sfx.Kind.DESTROY, position)
+	for worm in worms:
+		if queue.any(func(c: Vector2i) -> bool: return worm.touches(Vector2(c), RADIUS)):
+			worm.die()
 	# Own bases stay safe, as from bullets.
+	var damage := Tank.MAX_SHIELDS + 2 * Tank.SHIELDS_PER_LEVEL + 1
 	var victims := 0
 	for tank in tanks:
 		if tank.is_dead or tank.home_rect.has_point(Vector2i(tank.global_position.round())):
 			continue
-		if queue.any(func(c: Vector2i) -> bool: return tank.global_position.distance_to(Vector2(c)) <= RADIUS):
+		if not queue.any(func(c: Vector2i) -> bool: return tank.global_position.distance_to(Vector2(c)) <= RADIUS):
+			continue
+		tank.shields -= damage
+		if tank.shields < 0.0:
+			tank.fine()
 			tank.destroy(attacker)
 			if tank != attacker:
 				victims += 1

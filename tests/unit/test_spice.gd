@@ -59,8 +59,7 @@ func test_shot_sets_off_blow() -> void:
 	check_eq(gm.terrain.get_cell(c.x + SpiceBlow.RADIUS + 4, c.y), TerrainData.DIRT, "sand beyond RADIUS stays")
 	check_eq(gm.terrain.get_cell(c.x + 15, c.y - 10), TerrainData.GOLD, "gold stays")
 	check_eq(gm.terrain.cells.count(TerrainData.SPICE), 0, "the pocket is used up")
-	check(gm.tanks[1].is_dead, "a tank in the blow is destroyed")
-	check_eq(gm.tanks[1].shields, gm.tanks[1].max_shields(), "shields do not help")
+	check(gm.tanks[1].is_dead, "a tank without shield levels is destroyed")
 	check(not gm.tanks[2].is_dead, "a far tank survives")
 	check(not gm.tanks[0].is_dead, "the shooter survives out of range")
 	check_eq(gm.tanks[0].kills, 1, "the shooter gets the kill")
@@ -107,6 +106,72 @@ func test_own_base_is_safe() -> void:
 	gm.terrain.spice_hit.emit(c, gm.tanks[0])
 	check(not gm.tanks[1].is_dead, "a tank in its own base survives")
 	check_eq(gm.tanks[0].kills, 0, "no kill credited")
+	gm.manager.free()
+
+
+func test_shield_levels() -> void:
+	var gm := _make_game()
+	var c := _center(gm)
+	_place(gm.tanks[1], c + Vector2i(20, 8))
+	_place(gm.tanks[2], c + Vector2i(0, 20))
+	gm.tanks[1].levels[Tank.Upgrade.SHIELD] = 3
+	gm.tanks[1].shields = gm.tanks[1].max_shields()
+	gm.tanks[2].levels[Tank.Upgrade.SHIELD] = 2
+	gm.tanks[2].shields = gm.tanks[2].max_shields()
+	gm.terrain.spice_hit.emit(c, gm.tanks[0])
+	check(not gm.tanks[1].is_dead, "3 shield levels survive a full blow")
+	check_eq(gm.tanks[1].shields, 1.0, "with one shield left")
+	check(gm.tanks[2].is_dead, "2 shield levels do not")
+	gm.manager.free()
+
+
+func test_blow_kills_worm() -> void:
+	var gm := _make_game()
+	var c := _center(gm)
+	var worm := gm.worms[0]
+	worm.dormant = 0
+	worm.spawn(Vector2(c + Vector2i(15, 0)))
+	gm.terrain.spice_hit.emit(c, gm.tanks[0])
+	check_eq(gm.terrain.get_cell(c.x + 15, c.y), TerrainData.GOLD, "the worm turned to gold")
+	check(worm.body[0] != Vector2(c + Vector2i(15, 0)), "and came back elsewhere")
+	gm.manager.free()
+
+
+func test_blow_fines() -> void:
+	var gm := _make_game()
+	var c := _center(gm)
+	_place(gm.tanks[0], c + Vector2i(-20, 8))
+	_place(gm.tanks[1], c + Vector2i(20, 8))
+	_place(gm.tanks[2], c + Vector2i(0, 20))
+	gm.tanks[0].money = 1000
+	gm.tanks[0].levels[Tank.Upgrade.SPEED] = 2
+	gm.tanks[1].money = 5000
+	gm.tanks[2].money = 5000
+	gm.tanks[2].levels[Tank.Upgrade.ENERGY] = 2
+	gm.terrain.spice_hit.emit(c, null)
+	check_eq(gm.tanks[0].money, 0, "the fine takes at most all the money")
+	check_eq(gm.tanks[1].money, 5000, "no fine before the first upgrade")
+	check_eq(gm.tanks[2].money, 2000, "the fine is the price of the dearest upgrade")
+	var tank := gm.tanks[2]
+	tank.respawn(Vector2(tank.home_rect.get_center()))
+	check_eq(tank.money_lost, 0, "the fine is shown once")
+	check(tank.get_parent().get_children().any(func(n: Node) -> bool: return n is MoneyPopup), "the respawn shows the fine")
+	gm.manager.free()
+
+
+func test_worm_fines() -> void:
+	var gm := _make_game()
+	var c := _center(gm)
+	var tank := gm.tanks[1]
+	_place(tank, c + Vector2i(40, 0))
+	tank.money = 5000
+	tank.levels[Tank.Upgrade.SHIELD] = 1
+	var worm := gm.worms[0]
+	worm.dormant = 0
+	worm.spawn(Vector2(c + Vector2i(40, 0)))
+	worm.step(DT)
+	check(tank.is_dead, "the worm destroys the tank")
+	check_eq(tank.money, 3500, "and fines it")
 	gm.manager.free()
 
 

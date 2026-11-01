@@ -55,6 +55,8 @@ var fire_cooldown: float = 0.0
 var kills: int = 0
 # Value of the dirt and gold dug this round.
 var money: int = 0
+# Last fine, shown on respawn.
+var money_lost: int = 0
 var levels: Array[int] = [0, 0, 0, 0]
 # Active Special, or -1.
 var special: int = -1
@@ -110,8 +112,22 @@ func try_upgrade(upgrade: int) -> bool:
 	if levels[upgrade] >= MAX_LEVEL or money < cost:
 		return false
 	money -= cost
+	_pop_money(cost)
 	levels[upgrade] += 1
 	return true
+
+
+# Dying to a spice blow or the worm costs up to the price of the dearest upgrade bought.
+func fine() -> void:
+	money_lost = mini(money, levels.max() * UPGRADE_COST)
+	money -= money_lost
+
+
+func _pop_money(amount: int) -> void:
+	var popup := MoneyPopup.new()
+	popup.amount = amount
+	popup.position = position
+	get_parent().add_child(popup)
 
 
 func max_energy() -> float:
@@ -249,6 +265,9 @@ func respawn(pos: Vector2) -> void:
 	fire_cooldown = 0.0
 	_pad = -1
 	reset_physics_interpolation()
+	if money_lost > 0:
+		_pop_money(money_lost)
+		money_lost = 0
 
 
 static func snap_direction(v: Vector2) -> Vector2:

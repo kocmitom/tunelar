@@ -144,6 +144,7 @@ func start_round(new_seed: int) -> void:
 	for i in tanks.size():
 		tanks[i].home_rect = terrain.base_rects[i]
 		tanks[i].money = 0
+		tanks[i].money_lost = 0
 		tanks[i].levels = [0, 0, 0, 0]
 		tanks[i].special = -1
 		tanks[i].kills = 0
@@ -270,4 +271,4 @@ func _on_tank_destroyed(tank: Tank, attacker: Tank) -> void:
 func _on_spice_hit(cell: Vector2i, attacker: Tank) -> void:
 	var blow := SpiceBlow.new()
 	manager.world_root.add_child(blow)
-	blow.detonate(terrain, tanks, cell, attacker)
+	blow.detonate(terrain, tanks, worms, cell, attacker)

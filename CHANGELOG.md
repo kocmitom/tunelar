@@ -4,6 +4,17 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.27.0] - 2026-11-01
+
+### Added
+- Dying to a spice blow or the dune worm costs money: up to the price of the dearest upgrade that player has bought, so nothing before the first purchase and 1500 after it.
+- A red "-$N" rises from the tank and fades over 2 s whenever money is spent on an upgrade or, on respawning, lost to a fine.
+
+### Changed
+- A spice blow kills the dune worm too, turning it into gold as shots do.
+- A spice blow no longer destroys every tank outright: it deals as many hits as a full tank with 2 shield levels can take, so tanks with 3 or more shield levels at full shields survive it.
+- The worm leaves a spice pocket every 30 to 50 s instead of every 15 to 25 s.
+
 ## [0.26.3] - 2026-11-01
 
 ### Changed
