@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.26.3] - 2026-11-01
+
+### Changed
+- The spice blow radius is 30 px instead of 40, a quarter smaller.
+
 ## [0.26.2] - 2026-10-31
 
 ### Changed

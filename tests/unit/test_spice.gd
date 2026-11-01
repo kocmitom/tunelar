@@ -39,9 +39,9 @@ func test_shot_sets_off_blow() -> void:
 	var gm := _make_game()
 	var c := _center(gm)
 	var w := gm.terrain.width
-	gm.terrain.cells[c.y * w + c.x + 20] = TerrainData.GOLD
+	gm.terrain.cells[(c.y - 10) * w + c.x + 15] = TerrainData.GOLD
 	_place(gm.tanks[0], c + Vector2i(-80, 0))
-	_place(gm.tanks[1], c + Vector2i(30, 10))
+	_place(gm.tanks[1], c + Vector2i(20, 8))
 	_place(gm.tanks[2], c + Vector2i(0, 90))
 	_corridor(gm, -12, -3)
 	var bullet: Bullet = BulletScene.instantiate()
@@ -54,10 +54,10 @@ func test_shot_sets_off_blow() -> void:
 	for i in 3:
 		bullet.step(DT)
 	check(bullet.is_dead, "bullet stopped at the pocket")
-	check_eq(gm.terrain.get_cell(c.x + 35, c.y), TerrainData.AIR, "sand cleared within RADIUS")
+	check_eq(gm.terrain.get_cell(c.x + 25, c.y), TerrainData.AIR, "sand cleared within RADIUS")
 	check_eq(gm.terrain.get_cell(c.x - 2, c.y - SpiceBlow.RADIUS), TerrainData.AIR, "cleared up to RADIUS around the hit cell")
 	check_eq(gm.terrain.get_cell(c.x + SpiceBlow.RADIUS + 4, c.y), TerrainData.DIRT, "sand beyond RADIUS stays")
-	check_eq(gm.terrain.get_cell(c.x + 20, c.y), TerrainData.GOLD, "gold stays")
+	check_eq(gm.terrain.get_cell(c.x + 15, c.y - 10), TerrainData.GOLD, "gold stays")
 	check_eq(gm.terrain.cells.count(TerrainData.SPICE), 0, "the pocket is used up")
 	check(gm.tanks[1].is_dead, "a tank in the blow is destroyed")
 	check_eq(gm.tanks[1].shields, gm.tanks[1].max_shields(), "shields do not help")
@@ -71,7 +71,7 @@ func test_dent_next_to_pocket_sets_it_off() -> void:
 	var gm := _make_game()
 	var c := _center(gm)
 	_place(gm.tanks[0], c + Vector2i(-80, 0))
-	_place(gm.tanks[1], c + Vector2i(30, 10))
+	_place(gm.tanks[1], c + Vector2i(20, 8))
 	_corridor(gm, -12, -4)
 	var bullet: Bullet = BulletScene.instantiate()
 	bullet.terrain = gm.terrain
@@ -83,7 +83,7 @@ func test_dent_next_to_pocket_sets_it_off() -> void:
 	for i in 3:
 		bullet.step(DT)
 	check(bullet.is_dead, "bullet stopped in the dirt beside the pocket")
-	check_eq(gm.terrain.get_cell(c.x + 30, c.y), TerrainData.AIR, "the dent reaching a grain set off the blow")
+	check_eq(gm.terrain.get_cell(c.x + 25, c.y), TerrainData.AIR, "the dent reaching a grain set off the blow")
 	check(gm.tanks[1].is_dead, "a tank in the blow is destroyed")
 	check_eq(gm.tanks[0].kills, 1, "the shooter gets the kill")
 	gm.manager.free()
@@ -95,15 +95,15 @@ func test_blow_keeps_rock() -> void:
 	gm.terrain.cells[c.y * gm.terrain.width + c.x - 20] = TerrainData.BEDROCK
 	gm.terrain.spice_hit.emit(c, null)
 	check_eq(gm.terrain.get_cell(c.x - 20, c.y), TerrainData.BEDROCK, "rock stays")
-	check_eq(gm.terrain.get_cell(c.x - 30, c.y), TerrainData.AIR, "sand behind the rock cleared")
+	check_eq(gm.terrain.get_cell(c.x - 25, c.y), TerrainData.AIR, "sand behind the rock cleared")
 	gm.manager.free()
 
 
 func test_own_base_is_safe() -> void:
 	var gm := _make_game()
 	var c := _center(gm)
-	_place(gm.tanks[1], c + Vector2i(30, 10))
-	gm.tanks[1].home_rect = Rect2i(c + Vector2i(20, 0), Vector2i(21, 21))
+	_place(gm.tanks[1], c + Vector2i(20, 8))
+	gm.tanks[1].home_rect = Rect2i(c + Vector2i(10, 0), Vector2i(21, 21))
 	gm.terrain.spice_hit.emit(c, gm.tanks[0])
 	check(not gm.tanks[1].is_dead, "a tank in its own base survives")
 	check_eq(gm.tanks[0].kills, 0, "no kill credited")
@@ -113,10 +113,10 @@ func test_own_base_is_safe() -> void:
 func test_chain_reaction() -> void:
 	var gm := _make_game()
 	var c := _center(gm)
-	gm.terrain.fill_circle(c.x + 35, c.y, SpiceBlow.POCKET_RADIUS, TerrainData.SPICE)
-	_place(gm.tanks[1], c + Vector2i(65, 0))
+	gm.terrain.fill_circle(c.x + 26, c.y, SpiceBlow.POCKET_RADIUS, TerrainData.SPICE)
+	_place(gm.tanks[1], c + Vector2i(50, 0))
 	gm.terrain.spice_hit.emit(c, gm.tanks[0])
-	check_eq(gm.terrain.get_cell(c.x + 70, c.y), TerrainData.AIR, "the second pocket blew too")
+	check_eq(gm.terrain.get_cell(c.x + 52, c.y), TerrainData.AIR, "the second pocket blew too")
 	check_eq(gm.terrain.get_cell(c.x - SpiceBlow.RADIUS - 4, c.y), TerrainData.DIRT, "sand beyond both blows stays")
 	check(gm.tanks[1].is_dead, "the chained blow destroys tanks too")
 	check_eq(gm.tanks[0].kills, 1, "chained kills go to the trigger")
@@ -128,7 +128,7 @@ func test_digging_sets_off_blow() -> void:
 	var c := _center(gm)
 	var digger := gm.tanks[0]
 	_place(digger, c + Vector2i(-9, 0))
-	_place(gm.tanks[1], c + Vector2i(0, 30))
+	_place(gm.tanks[1], c + Vector2i(0, 20))
 	for i in 60:
 		digger.step_movement(DT, Vector2.RIGHT)
 		if digger.is_dead:
@@ -144,7 +144,7 @@ func test_laser_sets_off_blow() -> void:
 	var gm := _make_game()
 	var c := _center(gm)
 	_place(gm.tanks[0], c + Vector2i(-80, 0))
-	_place(gm.tanks[1], c + Vector2i(30, 10))
+	_place(gm.tanks[1], c + Vector2i(20, 8))
 	_corridor(gm, -12, -3)
 	var laser := Laser.new()
 	laser.terrain = gm.terrain
@@ -153,7 +153,7 @@ func test_laser_sets_off_blow() -> void:
 	laser.position = Vector2(c + Vector2i(-10, 0))
 	gm.bullets_root.add_child(laser)
 	laser.fire(Vector2.RIGHT)
-	check_eq(gm.terrain.get_cell(c.x + 30, c.y), TerrainData.AIR, "the beam set off the blow")
+	check_eq(gm.terrain.get_cell(c.x + 25, c.y), TerrainData.AIR, "the beam set off the blow")
 	check(gm.tanks[1].is_dead, "a tank in the blow is destroyed")
 	check_eq(gm.tanks[0].kills, 1, "the shooter gets the kill")
 	gm.manager.free()
