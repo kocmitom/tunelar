@@ -31,6 +31,7 @@ enum Upgrade { SHIELD, ENERGY, SPEED, RADAR }
 static var MAX_LEVEL := 5
 # About half the dirt cells one full base battery digs; level N costs N times this.
 static var UPGRADE_COST := 1500
+static var FINE := 1000
 static var ENERGY_PER_LEVEL := 0.5
 static var SPEED_PER_LEVEL := 0.25
 static var RADAR_PER_LEVEL := 0.25
@@ -117,9 +118,9 @@ func try_upgrade(upgrade: int) -> bool:
 	return true
 
 
-# Dying to a spice blow or the worm costs up to the price of the dearest upgrade bought.
+# Dying to a spice blow or the worm costs up to FINE.
 func fine() -> void:
-	money_lost = mini(money, levels.max() * UPGRADE_COST)
+	money_lost = mini(money, FINE)
 	money -= money_lost
 
 

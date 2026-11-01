@@ -143,15 +143,14 @@ func test_blow_fines() -> void:
 	_place(gm.tanks[0], c + Vector2i(-20, 8))
 	_place(gm.tanks[1], c + Vector2i(20, 8))
 	_place(gm.tanks[2], c + Vector2i(0, 20))
-	gm.tanks[0].money = 1000
-	gm.tanks[0].levels[Tank.Upgrade.SPEED] = 2
+	gm.tanks[0].money = 600
 	gm.tanks[1].money = 5000
 	gm.tanks[2].money = 5000
 	gm.tanks[2].levels[Tank.Upgrade.ENERGY] = 2
 	gm.terrain.spice_hit.emit(c, null)
 	check_eq(gm.tanks[0].money, 0, "the fine takes at most all the money")
-	check_eq(gm.tanks[1].money, 5000, "no fine before the first upgrade")
-	check_eq(gm.tanks[2].money, 2000, "the fine is the price of the dearest upgrade")
+	check_eq(gm.tanks[1].money, 5000 - Tank.FINE, "the fine without upgrades")
+	check_eq(gm.tanks[2].money, 5000 - Tank.FINE, "the same fine whatever the upgrades")
 	var tank := gm.tanks[2]
 	tank.respawn(Vector2(tank.home_rect.get_center()))
 	check_eq(tank.money_lost, 0, "the fine is shown once")
@@ -165,13 +164,12 @@ func test_worm_fines() -> void:
 	var tank := gm.tanks[1]
 	_place(tank, c + Vector2i(40, 0))
 	tank.money = 5000
-	tank.levels[Tank.Upgrade.SHIELD] = 1
 	var worm := gm.worms[0]
 	worm.dormant = 0
 	worm.spawn(Vector2(c + Vector2i(40, 0)))
 	worm.step(DT)
 	check(tank.is_dead, "the worm destroys the tank")
-	check_eq(tank.money, 3500, "and fines it")
+	check_eq(tank.money, 5000 - Tank.FINE, "and fines it")
 	gm.manager.free()
 
 

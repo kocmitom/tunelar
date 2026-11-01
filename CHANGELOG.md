@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.27.1] - 2026-11-01
+
+### Changed
+- Dying to a spice blow or the dune worm always costs 1000, or all the money if there is less, whatever upgrades the player has bought.
+
 ## [0.27.0] - 2026-11-01
 
 ### Added
