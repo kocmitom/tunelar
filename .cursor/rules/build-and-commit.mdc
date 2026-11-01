@@ -8,9 +8,9 @@ alwaysApply: true
 When a plan is fully implemented, the tests pass and the version is bumped (see `version-bump.mdc`), finish without being asked:
 
 1. Export the Windows build:
-   `godot --headless --path . --export-release "Windows Desktop" build/Tunneler.exe`
+   `godot --headless --path . --export-release "Windows Desktop" build/Tunelar.exe`
 2. Zip it for the LAN updater, using the new version:
-   `Compress-Archive -Path build\Tunneler.exe, build\Tunneler.pck -DestinationPath build\Tunneler-X.Y.Z.zip -Force`
+   `Compress-Archive -Path build\Tunelar.exe, build\Tunelar.pck -DestinationPath build\Tunelar-X.Y.Z.zip -Force`
 3. Commit everything as `Release X.Y.Z`, with a one-paragraph body summarizing the change and pointing to `CHANGELOG.md`. `build/` is gitignored, so only the sources go in.
    - This shell has no git identity, so pass it per commit without changing the git config:
      `git -c user.name="Tom Kocmi" -c user.email="14163064+kocmitom@users.noreply.github.com" commit ...`

@@ -1,4 +1,4 @@
-# Tunneler
+# Tunelář
 
 ## Build
 
@@ -6,10 +6,10 @@
 2. In the project folder run:
 
 ```
-godot --headless --path . --export-release "Windows Desktop" build/Tunneler.exe
+godot --headless --path . --export-release "Windows Desktop" build/Tunelar.exe
 ```
 
-3. Copy `build/Tunneler.exe` and `build/Tunneler.pck` to any PC and run the exe. Later versions arrive through the in-game LAN updater.
+3. Copy `build/Tunelar.exe` and `build/Tunelar.pck` to any PC and run the exe. Later versions arrive through the in-game LAN updater.
 
 ## Test
 

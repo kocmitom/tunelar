@@ -71,7 +71,7 @@ func _process(delta: float) -> void:
 	while udp.get_available_packet_count() > 0:
 		var parts := udp.get_packet().get_string_from_utf8().split(" ")
 		var ip := udp.get_packet_ip()
-		if parts.size() != 3 or parts[0] != "tunneler" or parts[1] != version or parts[2].to_int() == token:
+		if parts.size() != 3 or parts[0] != "tunelar" or parts[1] != version or parts[2].to_int() == token:
 			continue
 		# Two PCs that started together both host; the one with the higher token gives up its empty lobby.
 		if peer == null or (is_host and players.size() + spectators.size() == 1 and parts[2].to_int() < token):
@@ -85,7 +85,7 @@ func _process(delta: float) -> void:
 		broadcast_timer -= delta
 		if broadcast_timer <= 0.0:
 			broadcast_timer = BROADCAST_INTERVAL
-			udp.put_packet(("tunneler %s %d" % [version, token]).to_utf8_buffer())
+			udp.put_packet(("tunelar %s %d" % [version, token]).to_utf8_buffer())
 
 
 func _host() -> void:

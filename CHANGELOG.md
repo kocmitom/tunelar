@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+## [0.27.3] - 2026-11-01
+
+### Changed
+- The game is called Tunelář: in the window title, the lobby and the exe's details. The build files are `Tunelar.exe` and `Tunelar.pck`.
+
 ## [0.27.2] - 2026-11-01
 
 ### Fixed

@@ -4,8 +4,8 @@ config_version=5
 
 [application]
 
-config/name="Tunneler"
-config/version="0.27.2"
+config/name="Tunelář"
+config/version="0.27.3"
 run/main_scene="res://scenes/ui/lobby.tscn"
 config/features=PackedStringArray("4.7")
 
